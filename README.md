@@ -1,35 +1,35 @@
 # Go Do List
 From TODO to DONE - capture and complete your tasks with AI assistance.
 
-This application uses AI agents to help you manage and complete your to-do items. It was created for the Microsoft [AI Agents Hackathon 2025](https://microsoft.github.io/AI_Agents_Hackathon/).
+This application uses AI agents to help you manage and complete your to-do items. 
+
+It was created for the Microsoft [AI Agents Hackathon 2025](https://microsoft.github.io/AI_Agents_Hackathon/).
 
 ## Solution Overview
 
 Go Do List is an intelligent task management system that combines traditional to-do list functionality with AI-powered task processing. The system uses AI agents to:
 
-- Process and analyze documents attached to tasks
+- Process and analyse documents attached to tasks
 - Provide intelligent insights and summaries
 - Help break down complex tasks into manageable steps
 - Offer suggestions and recommendations based on task content
 
 ### Key Features
 
-- **Task Management**: Create, organize, and track tasks in folders
-- **Document Processing**: Upload and process PDF documents
-- **AI-Powered Analysis**: Get intelligent insights and summaries of your documents
-- **Vector Search**: Efficient document retrieval using Qdrant vector database
+- **Task Management**: Create, organise, and track tasks in folders
+- **AI agents to complete your tasks**: Use out-of-the-box or 3rd party AI agents to complete your tasks.
 - **Responsive UI**: Modern, user-friendly interface
 
 ## Demo
 
-[Add demo video or screenshots here]
+[Demo video or screenshots later]
 
 ## Prerequisites
 
 - Python 3.12 or later
 - Node.js 18+ and npm
 - OpenAI API key
-- Qdrant Cloud account
+- Qdrant Cloud account and API key
 
 ## Configuration
 
@@ -37,7 +37,7 @@ Go Do List is an intelligent task management system that combines traditional to
 
 1. Clone the repository:
    ```bash
-   git clone [repository-url]
+   git clone https://github.com/cchew/godolist.git
    cd godolist
    ```
 
@@ -47,6 +47,14 @@ Go Do List is an intelligent task management system that combines traditional to
    QDRANT_URL=https://your-cluster.qdrant.tech
    QDRANT_API_KEY=your-qdrant-api-key
    ```
+
+### OpenAI Setup
+
+1. Create an account at [OpenAI](https://platform.openai.com/)
+2. Click your profile icon (top right) and select "API keys" from the dropdown.
+3. Click “Create new secret key.”
+4. Note down your API key
+4. Add these to your `.env` file
 
 ### Qdrant Cloud Setup
 
@@ -110,43 +118,23 @@ Go Do List is an intelligent task management system that combines traditional to
 
 3. Open your browser and navigate to the provided local development URL (typically http://localhost:5173)
 
-### Using the Application
-
-1. **Create Tasks**:
-   - Click "Add Task" to create a new task
-   - Add a title, description, and priority level
-   - Organize tasks into folders
-
-2. **Process Documents**:
-   - Upload PDF documents to tasks
-   - The AI agent will process and analyze the content
-   - View insights and summaries in the task details
-
-3. **Get AI Assistance**:
-   - Use the "Review" feature to get AI-powered analysis
-   - Request summaries and key insights
-   - Get recommendations for task completion
-
 ## Architecture
 
 The application consists of three main components:
 
-1. **Frontend**: React-based user interface
-2. **Backend**: Flask API server
-3. **AI Agent**: Document processing and analysis system
-
-### Data Flow
-
-1. User uploads a document to a task
-2. Backend processes the document using the AI agent
-3. Document is stored in Qdrant vector database
-4. AI agent analyzes the content and provides insights
-5. Results are displayed in the user interface
+1. **Frontend**: Vue 3 JavaScript user interface
+2. **Backend**: Flask Python API server, with Agno AI agents
 
 ## Contributing
 
-[Add contribution guidelines here]
+[Vontribution guidelines later]
 
 ## License
 
-[Add license information here]
+[License information later]
+
+## Disclaimer
+
+This has only been tested on MacOS so might not work on all platforms without changes.
+
+The code in this repository was generated using GitHub Copilot and Cursor.
