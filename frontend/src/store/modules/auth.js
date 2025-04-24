@@ -15,7 +15,7 @@ const getters = {
 
 const actions = {
   async initAuth({ commit }) {
-    commit('SET_LOADING', true)
+    commit('setLoading', true)
     try {
       // TODO: Re-enable authentication when ready
       // Mock user for development
@@ -25,51 +25,51 @@ const actions = {
         displayName: 'Test User',
         photoURL: null
       }
-      commit('SET_USER', mockUser)
+      commit('setUser', mockUser)
     } catch (error) {
-      commit('SET_ERROR', error.message)
+      commit('setError', error.message)
     } finally {
-      commit('SET_LOADING', false)
+      commit('setLoading', false)
     }
   },
   
   async googleLogin({ commit }) {
-    commit('SET_LOADING', true)
-    commit('SET_ERROR', null)
+    commit('setLoading', true)
+    commit('setError', null)
     try {
       const { user } = await signInWithGoogle()
-      commit('SET_USER', user)
+      commit('setUser', user)
       return user
     } catch (error) {
-      commit('SET_ERROR', error.message)
+      commit('setError', error.message)
       throw error
     } finally {
-      commit('SET_LOADING', false)
+      commit('setLoading', false)
     }
   },
   
   async logout({ commit }) {
-    commit('SET_LOADING', true)
+    commit('setLoading', true)
     try {
       await logoutUser()
-      commit('SET_USER', null)
+      commit('setUser', null)
     } catch (error) {
-      commit('SET_ERROR', error.message)
+      commit('setError', error.message)
       throw error
     } finally {
-      commit('SET_LOADING', false)
+      commit('setLoading', false)
     }
   }
 }
 
 const mutations = {
-  SET_USER(state, user) {
+  setUser(state, user) {
     state.user = user
   },
-  SET_LOADING(state, loading) {
+  setLoading(state, loading) {
     state.loading = loading
   },
-  SET_ERROR(state, error) {
+  setError(state, error) {
     state.error = error
   }
 }

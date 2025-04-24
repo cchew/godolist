@@ -108,7 +108,7 @@ export default {
   },
   
   mutations: {
-    ADD_MESSAGE(state, { chatId, message }) {
+    addMessage(state, { chatId, message }) {
       const chat = state.chats.find(c => c.id === chatId)
       if (chat) {
         chat.messages.push(message)
@@ -120,7 +120,7 @@ export default {
   
   actions: {
     sendMessage({ commit }, { chatId, message }) {
-      commit('ADD_MESSAGE', { chatId, message })
+      commit('addMessage', { chatId, message })
     }
   }
 } 

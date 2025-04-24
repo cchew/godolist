@@ -20,27 +20,27 @@ const getters = {
 
 const actions = {
   async fetchLists({ commit }) {
-    commit('SET_LOADING', true)
+    commit('setLoading', true)
     try {
       const response = await axios.get('http://127.0.0.1:5000/folders')
       console.log(`fetchList response`, response.data);
       // Ensure we're getting an array of folder objects
       if (Array.isArray(response.data)) {
-        commit('SET_LISTS', response.data)
+        commit('setLists', response.data)
       } else {
         console.error('Unexpected API response format:', response.data)
-        commit('SET_ERROR', 'Invalid API response format')
+        commit('setError', 'Invalid API response format')
       }
     } catch (error) {
       console.error('Error fetching lists:', error)
-      commit('SET_ERROR', error.response?.data?.error || error.message)
+      commit('setError', error.response?.data?.error || error.message)
     } finally {
-      commit('SET_LOADING', false)
+      commit('setLoading', false)
     }
   },
   
   async addList({ commit }, list) {
-    commit('SET_LOADING', true)
+    commit('setLoading', true)
     try {
       const response = await axios.post('http://127.0.0.1:5000/folders', {
         name: list.name
@@ -51,18 +51,18 @@ const actions = {
         name: response.data.name
       }
       
-      commit('ADD_LIST', newList)
+      commit('addList', newList)
       return newList
     } catch (error) {
-      commit('SET_ERROR', error.response?.data?.error || error.message)
+      commit('setError', error.response?.data?.error || error.message)
       throw error
     } finally {
-      commit('SET_LOADING', false)
+      commit('setLoading', false)
     }
   },
   
   async updateList({ commit }, { id, updates }) {
-    commit('SET_LOADING', true)
+    commit('setLoading', true)
     try {
       // First update the folder name
       if (updates.name) {
@@ -82,17 +82,17 @@ const actions = {
         }
       }
       
-      commit('UPDATE_LIST', { id, updates })
+      commit('updateList', { id, updates })
     } catch (error) {
-      commit('SET_ERROR', error.response?.data?.error || error.message)
+      commit('setError', error.response?.data?.error || error.message)
       throw error
     } finally {
-      commit('SET_LOADING', false)
+      commit('setLoading', false)
     }
   },
   
   async deleteList({ commit, dispatch }, id) {
-    commit('SET_LOADING', true)
+    commit('setLoading', true)
     try {
       // First get all tasks in this folder
       const response = await axios.get('http://127.0.0.1:5000/tasks', {
@@ -110,41 +110,41 @@ const actions = {
       // Delete the folder
       await axios.delete(`http://127.0.0.1:5000/folders/${id}`)
       
-      commit('DELETE_LIST', id)
+      commit('deleteList', id)
     } catch (error) {
-      commit('SET_ERROR', error.response?.data?.error || error.message)
+      commit('setError', error.response?.data?.error || error.message)
       throw error
     } finally {
-      commit('SET_LOADING', false)
+      commit('setLoading', false)
     }
   }
 }
 
 const mutations = {
-  SET_LISTS(state, lists) {
+  setLists(state, lists) {
     state.lists = lists
   },
   
-  ADD_LIST(state, list) {
+  addList(state, list) {
     state.lists.push(list)
   },
   
-  UPDATE_LIST(state, { id, updates }) {
+  updateList(state, { id, updates }) {
     const index = state.lists.findIndex(list => list.id === id)
     if (index !== -1) {
       state.lists[index] = { ...state.lists[index], ...updates }
     }
   },
   
-  DELETE_LIST(state, id) {
+  deleteList(state, id) {
     state.lists = state.lists.filter(list => list.id !== id)
   },
   
-  SET_LOADING(state, loading) {
+  setLoading(state, loading) {
     state.loading = loading
   },
   
-  SET_ERROR(state, error) {
+  setError(state, error) {
     state.error = error
   }
 }

@@ -121,7 +121,6 @@
                     <template v-slot:prepend>
                       <v-icon :icon="item.raw.icon" size="small" />
                     </template>
-                    <v-list-item-title>{{ item.title }}</v-list-item-title>
                   </v-list-item>
                 </template>
               </v-select>

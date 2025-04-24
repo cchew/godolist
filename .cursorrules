@@ -1,11 +1,18 @@
-# JavaScript
+# Development standards
 
-1. Document with JSDoc
+1. Ensure that all code are properly documented and formatted.
+
+# Python 
+
+1. When installing new Python packages, always activate `venv` and update `requirements.txt`
+1. Use Python coding conventions
 
 # Vue
 
-1. Format Vue code as per Vue Style Guide
 1. Use Vue 3 and Options API
+1. Create and use components where appropriate
+1. Format as per Vue Style Guide
+1. Document using JSDoc
 
 # Vuex
 1. For mutations, always use camelCase (for example 'setTask')

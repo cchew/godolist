@@ -62,24 +62,24 @@ const getters = {
 
 const actions = {
   async fetchTasks({ commit }, folderId = null) {
-    commit('SET_LOADING', true)
+    commit('setLoading', true)
     try {
       console.log('Fetching tasks for folderId:', folderId)
       const response = await axios.get('http://127.0.0.1:5000/tasks', {
         params: { folder_id: folderId }
       })
       console.log('Tasks API response:', response.data)
-      commit('SET_TASKS', response.data)
+      commit('setTasks', response.data)
     } catch (error) {
       console.error('Error fetching tasks:', error)
-      commit('SET_ERROR', error.response?.data?.error || error.message)
+      commit('setError', error.response?.data?.error || error.message)
     } finally {
-      commit('SET_LOADING', false)
+      commit('setLoading', false)
     }
   },
   
   async addTask({ commit }, task) {
-    commit('SET_LOADING', true)
+    commit('setLoading', true)
     try {
       console.log('Adding task:', task)
       // Map frontend field names to backend API field names
@@ -101,19 +101,19 @@ const actions = {
         listId: response.data.folder_id
       }
       
-      commit('ADD_TASK', newTask)
+      commit('addTask', newTask)
       return newTask
     } catch (error) {
       console.error('Error adding task:', error)
-      commit('SET_ERROR', error.response?.data?.error || error.message)
+      commit('setError', error.response?.data?.error || error.message)
       throw error
     } finally {
-      commit('SET_LOADING', false)
+      commit('setLoading', false)
     }
   },
   
   async updateTask({ commit }, { id, updates }) {
-    commit('SET_LOADING', true)
+    commit('setLoading', true)
     try {
       console.log('Updating task:', id, updates)
       // Map frontend field names to backend API field names
@@ -135,29 +135,29 @@ const actions = {
         listId: response.data.folder_id
       }
       
-      commit('UPDATE_TASK', { id, updates: frontendUpdates })
+      commit('updateTask', { id, updates: frontendUpdates })
       return frontendUpdates
     } catch (error) {
       console.error('Error updating task:', error)
-      commit('SET_ERROR', error.response?.data?.error || error.message)
+      commit('setError', error.response?.data?.error || error.message)
       throw error
     } finally {
-      commit('SET_LOADING', false)
+      commit('setLoading', false)
     }
   },
   
   async deleteTask({ commit }, id) {
-    commit('SET_LOADING', true)
+    commit('setLoading', true)
     try {
       console.log('Deleting task:', id)
       await axios.delete(`http://127.0.0.1:5000/tasks?id=${id}`)
-      commit('DELETE_TASK', id)
+      commit('deleteTask', id)
     } catch (error) {
       console.error('Error deleting task:', error)
-      commit('SET_ERROR', error.response?.data?.error || error.message)
+      commit('setError', error.response?.data?.error || error.message)
       throw error
     } finally {
-      commit('SET_LOADING', false)
+      commit('setLoading', false)
     }
   },
   
@@ -182,21 +182,21 @@ const actions = {
   },
   
   setSelectedTask({ commit }, task) {
-    commit('SET_SELECTED_TASK', task)
+    commit('setSelectedTask', task)
   }
 }
 
 const mutations = {
-  SET_TASKS(state, tasks) {
+  setTasks(state, tasks) {
     console.log('Setting tasks in state:', tasks)
     state.tasks = tasks
   },
   
-  ADD_TASK(state, task) {
+  addTask(state, task) {
     state.tasks.push(task)
   },
   
-  UPDATE_TASK(state, { id, updates }) {
+  updateTask(state, { id, updates }) {
     const index = state.tasks.findIndex(task => task.id === id)
     if (index !== -1) {
       state.tasks[index] = { ...state.tasks[index], ...updates }
@@ -208,7 +208,7 @@ const mutations = {
     }
   },
   
-  DELETE_TASK(state, id) {
+  deleteTask(state, id) {
     state.tasks = state.tasks.filter(task => task.id !== id)
     
     // Clear selected task if it's the one being deleted
@@ -217,15 +217,15 @@ const mutations = {
     }
   },
   
-  SET_SELECTED_TASK(state, task) {
+  setSelectedTask(state, task) {
     state.selectedTask = task
   },
   
-  SET_LOADING(state, loading) {
+  setLoading(state, loading) {
     state.loading = loading
   },
   
-  SET_ERROR(state, error) {
+  setError(state, error) {
     state.error = error
   }
 }
