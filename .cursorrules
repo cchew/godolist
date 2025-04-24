@@ -1,0 +1,11 @@
+# JavaScript
+
+1. Document with JSDoc
+
+# Vue
+
+1. Format Vue code as per Vue Style Guide
+1. Use Vue 3 and Options API
+
+# Vuex
+1. For mutations, always use camelCase (for example 'setTask')

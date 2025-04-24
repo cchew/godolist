@@ -1,38 +1,62 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import TaskList from '../components/TaskList.vue';
-import store from '../store';
+import { createRouter, createWebHistory } from 'vue-router'
+import store from '@/store'
+
+// Views
+import Login from '@/views/Login'
+import Dashboard from '@/views/Dashboard'
+import ChatDetail from '@/components/chats/ChatDetail'
 
 const routes = [
   {
     path: '/',
-    redirect: '/tasks/my-day'
+    redirect: '/tasks'
   },
   {
-    path: '/tasks/unassigned',
-    name: 'UnassignedTasks',
-    component: TaskList
+    path: '/login',
+    name: 'Login',
+    component: Login,
+    meta: { requiresAuth: false }
   },
   {
-    path: '/tasks/:folderId',
-    name: 'TasksList',
-    component: TaskList,
-    props: true
+    path: '/tasks',
+    name: 'Dashboard',
+    component: Dashboard,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/lists/:listId',
+    name: 'TaskList',
+    component: Dashboard,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/chats',
+    name: 'Chats',
+    component: Dashboard,
+    meta: { requiresAuth: true }
   }
-];
+]
 
 const router = createRouter({
   history: createWebHistory(),
   routes
-});
+})
 
+// Navigation guard
 router.beforeEach((to, from, next) => {
-  // Update the current folder in the store based on the route
-  if (to.params.folderId) {
-    store.dispatch('setCurrentFolder', to.params.folderId === 'my-day' ? 'my-day' : Number(to.params.folderId));
-  } else if (to.name === 'UnassignedTasks') {
-    store.dispatch('setCurrentFolder', 'unassigned');
-  }
-  next();
-});
+  // TODO: Re-enable authentication when ready
+  next()
+  
+  // Previous implementation:
+  // const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  // const isAuthenticated = store.getters['auth/isAuthenticated']
+  // if (requiresAuth && !isAuthenticated) {
+  //   next('/login')
+  // } else if (to.path === '/login' && isAuthenticated) {
+  //   next('/tasks')
+  // } else {
+  //   next()
+  // }
+})
 
-export default router;
+export default router

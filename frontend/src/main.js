@@ -1,11 +1,16 @@
-import { createApp } from 'vue';
-import App from './App.vue';
-import store from './store';
-import router from './router';
-import './style.css';
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
+import store from './store'
+import { vuetify } from './plugins/vuetify'
+import './style.css'
+import { initializeFirebase } from './services/firebase'
 
-const app = createApp(App);
+// Initialize Firebase
+initializeFirebase()
 
-app.use(store);
-app.use(router);
-app.mount('#app');
+createApp(App)
+  .use(router)
+  .use(store)
+  .use(vuetify)
+  .mount('#app')

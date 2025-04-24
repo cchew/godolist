@@ -16,7 +16,14 @@ from agents.general_agent import GeneralAgent
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+# Configure CORS to allow requests from the Vue.js frontend
+CORS(app, resources={
+    r"/*": {
+        "origins": ["http://localhost:5173"],
+        "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # Database and file storage setup
 db_path = 'godolist.db'
@@ -267,7 +274,27 @@ def manage_tasks():
                     values
                 )
                 conn.commit()
-                return jsonify({'message': 'Task updated successfully'}), 200
+                
+                # Fetch the updated task
+                cursor.execute('''
+                    SELECT id, folder_id, title, completed, is_important, notes 
+                    FROM tasks WHERE id = ?
+                ''', (task_id,))
+                row = cursor.fetchone()
+                
+                if row:
+                    updated_task = {
+                        'id': row[0],
+                        'folder_id': row[1],
+                        'title': row[2],
+                        'completed': bool(row[3]),
+                        'isImportant': bool(row[4]),
+                        'notes': row[5]
+                    }
+                    return jsonify(updated_task), 200
+                else:
+                    return jsonify({'error': 'Task not found'}), 404
+                    
         except sqlite3.Error as e:
             return jsonify({'error': f'Database error: {str(e)}'}), 500
 
