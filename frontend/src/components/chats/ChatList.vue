@@ -51,26 +51,51 @@
 <script>
 import { mapGetters } from 'vuex'
 
+/**
+ * ChatList component displays a list of available chats
+ * @component
+ */
 export default {
   name: 'ChatList',
+  
   props: {
+    /**
+     * Whether the chats are currently loading
+     * @type {Boolean}
+     * @default false
+     */
     loading: {
       type: Boolean,
       default: false
     }
   },
+  
   computed: {
     ...mapGetters('chats', ['allChats']),
     
+    /**
+     * List of available chats
+     * @returns {Array} Array of chat objects
+     */
     chats() {
       return this.allChats
     }
   },
+  
   methods: {
+    /**
+     * Emits select-chat event with the selected chat
+     * @param {Object} chat - The selected chat
+     */
     selectChat(chat) {
       this.$emit('select-chat', chat)
     },
     
+    /**
+     * Formats date for display
+     * @param {string} dateString - Date string to format
+     * @returns {string} Formatted date string
+     */
     formatDate(dateString) {
       const date = new Date(dateString)
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })

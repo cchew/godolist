@@ -1,9 +1,18 @@
+/**
+ * Vuetify plugin configuration
+ * @module plugins/vuetify
+ */
+
 import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
+/**
+ * Custom theme configuration
+ * @type {Object}
+ */
 const customTheme = {
   dark: true,
   colors: {
@@ -27,6 +36,10 @@ const customTheme = {
   }
 }
 
+/**
+ * Vuetify instance
+ * @type {Vuetify}
+ */
 export const vuetify = createVuetify({
   components,
   directives,

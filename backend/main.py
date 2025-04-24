@@ -1,3 +1,8 @@
+"""
+Flask application for Go Do List backend API.
+This module provides endpoints for managing tasks, folders, and file uploads.
+"""
+
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import sqlite3
@@ -46,7 +51,7 @@ vector_db = Qdrant(
 )
 
 def init_db():
-    """Initialize SQLite database"""
+    """Initialize SQLite database with required tables."""
     with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
         cursor.execute('''
@@ -79,10 +84,31 @@ def init_db():
         conn.commit()
 
 def allowed_file(filename):
+    """
+    Check if the file extension is allowed.
+    
+    Args:
+        filename (str): Name of the file to check
+        
+    Returns:
+        bool: True if file extension is allowed, False otherwise
+    """
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def process_file(file_path, task_id):
-    """Process PDF file using Agno's PDFKnowledgeBase"""
+    """
+    Process PDF file using Agno's PDFKnowledgeBase.
+    
+    Args:
+        file_path (str): Path to the PDF file
+        task_id (int): ID of the associated task
+        
+    Returns:
+        str: Embedding ID for the processed file
+        
+    Raises:
+        Exception: If file processing fails
+    """
     try:
         # Check if the file has already been processed
         with sqlite3.connect(db_path) as conn:
@@ -124,6 +150,12 @@ init_db()
 # Routes
 @app.route('/folders', methods=['GET', 'POST'])
 def manage_folders():
+    """
+    Manage folders (GET: list all folders, POST: create new folder).
+    
+    Returns:
+        Response: JSON response with folder data
+    """
     if request.method == 'GET':
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
@@ -142,6 +174,12 @@ def manage_folders():
 
 @app.route('/tasks', methods=['GET', 'POST', 'PATCH', 'DELETE'])
 def manage_tasks():
+    """
+    Manage tasks (GET: list tasks, POST: create task, PATCH: update task, DELETE: delete task).
+    
+    Returns:
+        Response: JSON response with task data
+    """
     if request.method == 'GET':
         folder_id = request.args.get('folder_id')
         with sqlite3.connect(db_path) as conn:
@@ -203,79 +241,66 @@ def manage_tasks():
                     'isImportant': data.get('isImportant', False),
                     'notes': data.get('notes', '')
                 }), 201
-        except sqlite3.Error as e:
-            return jsonify({'error': f'Database error: {str(e)}'}), 500
+                
         except Exception as e:
-            return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
-
-    if request.method == 'DELETE':
-        task_id = request.args.get('id')
-        if not task_id:
-            return jsonify({'error': 'Task ID is required'}), 400
-
-        try:
-            with sqlite3.connect(db_path) as conn:
-                cursor = conn.cursor()
-                
-                # First delete associated files
-                cursor.execute('DELETE FROM task_files WHERE task_id = ?', (task_id,))
-                
-                # Then delete the task
-                cursor.execute('DELETE FROM tasks WHERE id = ?', (task_id,))
-                
-                if cursor.rowcount == 0:
-                    return jsonify({'error': 'Task not found'}), 404
-                
-                conn.commit()
-                return jsonify({'message': 'Task deleted successfully'}), 200
-        except sqlite3.Error as e:
-            return jsonify({'error': f'Database error: {str(e)}'}), 500
-        except Exception as e:
-            return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
+            return jsonify({'error': str(e)}), 500
 
     if request.method == 'PATCH':
         task_id = request.args.get('id')
         if not task_id:
             return jsonify({'error': 'Task ID is required'}), 400
-        
+            
         data = request.json
-        update_fields = []
-        values = []
-        
-        if 'title' in data:
-            update_fields.append('title = ?')
-            values.append(data['title'])
-        if 'completed' in data:
-            update_fields.append('completed = ?')
-            values.append(data['completed'])
-        if 'isImportant' in data:
-            update_fields.append('is_important = ?')
-            values.append(data['isImportant'])
-        if 'notes' in data:
-            update_fields.append('notes = ?')
-            values.append(data['notes'])
-        if 'folder_id' in data:
-            # Convert empty string or 'unassigned' to None for folder_id
-            folder_id = data['folder_id']
-            if folder_id == '' or folder_id == 'unassigned':
-                folder_id = None
-            update_fields.append('folder_id = ?')
-            values.append(folder_id)
-        
-        if not update_fields:
-            return jsonify({'error': 'No fields to update'}), 400
-        
-        values.append(task_id)
+        if not data:
+            return jsonify({'error': 'No update data provided'}), 400
+            
         try:
             with sqlite3.connect(db_path) as conn:
                 cursor = conn.cursor()
+                
+                # Build update query dynamically based on provided fields
+                update_fields = []
+                params = []
+                
+                if 'title' in data:
+                    update_fields.append('title = ?')
+                    params.append(data['title'])
+                    
+                if 'completed' in data:
+                    update_fields.append('completed = ?')
+                    params.append(data['completed'])
+                    
+                if 'isImportant' in data:
+                    update_fields.append('is_important = ?')
+                    params.append(data['isImportant'])
+                    
+                if 'notes' in data:
+                    update_fields.append('notes = ?')
+                    params.append(data['notes'])
+                    
+                if 'folder_id' in data:
+                    folder_id = data['folder_id']
+                    if folder_id == '' or folder_id == 'unassigned':
+                        folder_id = None
+                    update_fields.append('folder_id = ?')
+                    params.append(folder_id)
+                
+                if not update_fields:
+                    return jsonify({'error': 'No valid fields to update'}), 400
+                
+                # Add task_id to params
+                params.append(task_id)
+                
+                # Execute update
                 cursor.execute(
-                    f'UPDATE tasks SET {", ".join(update_fields)} WHERE id = ?',
-                    values
+                    f'''UPDATE tasks 
+                        SET {', '.join(update_fields)}
+                        WHERE id = ?''',
+                    params
                 )
                 conn.commit()
                 
-                # Fetch the updated task
+                # Return updated task
                 cursor.execute('''
                     SELECT id, folder_id, title, completed, is_important, notes 
                     FROM tasks WHERE id = ?
@@ -283,145 +308,187 @@ def manage_tasks():
                 row = cursor.fetchone()
                 
                 if row:
-                    updated_task = {
+                    return jsonify({
                         'id': row[0],
                         'folder_id': row[1],
                         'title': row[2],
                         'completed': bool(row[3]),
                         'isImportant': bool(row[4]),
                         'notes': row[5]
-                    }
-                    return jsonify(updated_task), 200
+                    })
                 else:
                     return jsonify({'error': 'Task not found'}), 404
                     
-        except sqlite3.Error as e:
-            return jsonify({'error': f'Database error: {str(e)}'}), 500
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    if request.method == 'DELETE':
+        task_id = request.args.get('id')
+        if not task_id:
+            return jsonify({'error': 'Task ID is required'}), 400
+            
+        try:
+            with sqlite3.connect(db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('DELETE FROM tasks WHERE id = ?', (task_id,))
+                conn.commit()
+                return '', 204
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
 @app.route('/tasks/<int:task_id>/files', methods=['POST'])
 def upload_file(task_id):
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
+    """
+    Upload a file for a task.
     
+    Args:
+        task_id (int): ID of the task to attach file to
+        
+    Returns:
+        Response: JSON response with file data
+    """
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+        
     file = request.files['file']
     if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
-    
+        return jsonify({'error': 'No file selected'}), 400
+        
     if not allowed_file(file.filename):
         return jsonify({'error': 'File type not allowed'}), 400
-    
+        
     try:
         filename = secure_filename(file.filename)
         file_path = os.path.join(UPLOAD_FOLDER, filename)
         file.save(file_path)
         
-        # Process file and store embeddings using Agno
-        try:
-            embedding_id = process_file(file_path, task_id)
-        except Exception as e:
-            os.remove(file_path)  # Clean up file if processing fails
-            return jsonify({'error': f'Error processing file: {str(e)}'}), 500
-        
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute('''
-                INSERT INTO task_files (task_id, filename, file_path, embedding_id)
-                VALUES (?, ?, ?, ?)
-            ''', (task_id, filename, file_path, embedding_id))
+            cursor.execute(
+                '''INSERT INTO task_files (task_id, filename, file_path) 
+                   VALUES (?, ?, ?)''',
+                (task_id, filename, file_path)
+            )
             file_id = cursor.lastrowid
+            conn.commit()
+            
+            # Process the file
+            embedding_id = process_file(file_path, task_id)
+            
+            # Update the file record with the embedding_id
+            cursor.execute(
+                'UPDATE task_files SET embedding_id = ? WHERE id = ?',
+                (embedding_id, file_id)
+            )
             conn.commit()
             
             return jsonify({
                 'id': file_id,
                 'task_id': task_id,
                 'filename': filename,
+                'file_path': file_path,
                 'embedding_id': embedding_id
-            })
+            }), 201
             
     except Exception as e:
-        # Clean up file if database operation fails
-        if 'file_path' in locals():
-            try:
-                os.remove(file_path)
-            except:
-                pass
-        return jsonify({'error': f'Error uploading file: {str(e)}'}), 500
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/tasks/<int:task_id>/files', methods=['GET'])
 def get_task_files(task_id):
+    """
+    Get all files attached to a task.
+    
+    Args:
+        task_id (int): ID of the task
+        
+    Returns:
+        Response: JSON response with file data
+    """
     with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT id, filename FROM task_files WHERE task_id = ?', (task_id,))
-        files = [{'id': row[0], 'filename': row[1]} for row in cursor.fetchall()]
+        cursor.execute(
+            'SELECT id, filename, file_path, embedding_id FROM task_files WHERE task_id = ?',
+            (task_id,)
+        )
+        files = [
+            {
+                'id': row[0],
+                'filename': row[1],
+                'file_path': row[2],
+                'embedding_id': row[3]
+            }
+            for row in cursor.fetchall()
+        ]
         return jsonify(files)
 
 @app.route('/files/<int:file_id>', methods=['GET'])
 def download_file(file_id):
+    """
+    Download a file.
+    
+    Args:
+        file_id (int): ID of the file to download
+        
+    Returns:
+        Response: File download response
+    """
     with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT file_path, filename FROM task_files WHERE id = ?', (file_id,))
-        result = cursor.fetchone()
-        if result:
-            file_path, filename = result
-            return send_file(file_path, as_attachment=True, download_name=filename)
-        return jsonify({'error': 'File not found'}), 404
+        cursor.execute('SELECT filename, file_path FROM task_files WHERE id = ?', (file_id,))
+        row = cursor.fetchone()
+        
+        if row:
+            return send_file(row[1], as_attachment=True, download_name=row[0])
+        else:
+            return jsonify({'error': 'File not found'}), 404
 
 @app.route('/process-task', methods=['POST'])
 def process_task():
-    try:
-        data = request.json
-        task_id = data['task_id']
-        task_title = data['task_title']
-        task_type = data['task_type']
-        files = data['files']
-        agent_config = {
-            'openai_api_key': os.getenv('OPENAI_API_KEY'),
-            'qdrant_url': os.getenv('QDRANT_URL'),
-            'qdrant_api_key': os.getenv('QDRANT_API_KEY')
-        }
-
-        # Initialize the General Agent
-        agent = GeneralAgent(
-            openai_api_key=agent_config['openai_api_key'],
-            qdrant_url=agent_config['qdrant_url'],
-            qdrant_api_key=agent_config['qdrant_api_key']
-        )
-
-        # If there are files, process them and set up the knowledge base
-        if files:
-            file_paths = [os.path.join(UPLOAD_FOLDER, file['filename']) for file in files]
-            for file_path in file_paths:
-                agent.process_document(file_path)
-            agent.initialize_agent(task_type, task_title)
-        else:
-            raise Exception("No files attached to the task")
-
-        # Process the task and handle the Message object
-        response = agent.process_task(task_title)
+    """
+    Process a task using the general agent.
+    
+    Returns:
+        Response: JSON response with processing results
+    """
+    data = request.json
+    if not data or 'task_id' not in data:
+        return jsonify({'error': 'Task ID is required'}), 400
         
-        # Extract the content from the response
-        if hasattr(response, 'content'):
-            response_content = response.content
-        elif hasattr(response, 'text'):
-            response_content = response.text
-        else:
-            response_content = str(response)
-
-        # Ensure the response is a string and not an object
-        if not isinstance(response_content, str):
-            response_content = str(response_content)
-
-        return jsonify({
-            'success': True,
-            'response': response_content
-        })
-
+    try:
+        # Get task details
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT id, title, notes 
+                FROM tasks WHERE id = ?
+            ''', (data['task_id'],))
+            row = cursor.fetchone()
+            
+            if not row:
+                return jsonify({'error': 'Task not found'}), 404
+                
+            task = {
+                'id': row[0],
+                'title': row[1],
+                'notes': row[2]
+            }
+            
+            # Get associated files
+            cursor.execute('''
+                SELECT file_path, embedding_id 
+                FROM task_files 
+                WHERE task_id = ? AND embedding_id IS NOT NULL
+            ''', (data['task_id'],))
+            files = cursor.fetchall()
+            
+            # Process task with general agent
+            agent = GeneralAgent(vector_db)
+            result = agent.process_task(task, files)
+            
+            return jsonify(result)
+            
     except Exception as e:
-        print(f"Error processing task: {str(e)}")  # Add logging
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

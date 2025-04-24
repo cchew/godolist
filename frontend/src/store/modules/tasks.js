@@ -1,6 +1,15 @@
+/**
+ * Tasks store module
+ * @module store/modules/tasks
+ */
+
 import { v4 as uuidv4 } from 'uuid'
 import axios from 'axios'
 
+/**
+ * Initial state for the tasks module
+ * @type {Object}
+ */
 const state = {
   tasks: [],
   loading: false,
@@ -8,9 +17,23 @@ const state = {
   selectedTask: null
 }
 
+/**
+ * Getters for the tasks module
+ * @type {Object}
+ */
 const getters = {
+  /**
+   * All tasks
+   * @param {Object} state - Module state
+   * @returns {Array} Array of task objects
+   */
   allTasks: (state) => state.tasks,
   
+  /**
+   * Tasks filtered by list ID
+   * @param {Object} state - Module state
+   * @returns {Function} Function that takes listId and returns filtered tasks
+   */
   tasksByList: (state) => (listId) => {
     console.log('Filtering tasks for listId:', listId, 'Current tasks:', state.tasks)
     if (listId === 'important') {
@@ -27,6 +50,11 @@ const getters = {
     return state.tasks
   },
   
+  /**
+   * Search tasks by query and list ID
+   * @param {Object} state - Module state
+   * @returns {Function} Function that takes query and listId and returns filtered tasks
+   */
   searchTasks: (state) => (query, listId) => {
     if (!query) {
       // When no search query, respect the current list filter
@@ -48,19 +76,61 @@ const getters = {
     })
   },
   
+  /**
+   * Whether tasks are loading
+   * @param {Object} state - Module state
+   * @returns {boolean} True if loading
+   */
   isLoading: (state) => state.loading,
+  
+  /**
+   * Current error message
+   * @param {Object} state - Module state
+   * @returns {string|null} Error message or null
+   */
   error: (state) => state.error,
+  
+  /**
+   * Currently selected task
+   * @param {Object} state - Module state
+   * @returns {Object|null} Selected task or null
+   */
   selectedTask: (state) => state.selectedTask,
   
+  /**
+   * Completed tasks
+   * @param {Object} state - Module state
+   * @returns {Array} Array of completed tasks
+   */
   completedTasks: (state) => state.tasks.filter(task => task.completed),
+  
+  /**
+   * Important tasks
+   * @param {Object} state - Module state
+   * @returns {Array} Array of important tasks
+   */
   importantTasks: (state) => state.tasks.filter(task => task.isImportant),
   
+  /**
+   * Get task by ID
+   * @param {Object} state - Module state
+   * @returns {Function} Function that takes task ID and returns task object
+   */
   taskById: (state) => (id) => {
     return state.tasks.find(task => task.id === id)
   }
 }
 
+/**
+ * Actions for the tasks module
+ * @type {Object}
+ */
 const actions = {
+  /**
+   * Fetch tasks from the API
+   * @param {Object} context - Vuex context
+   * @param {string|null} folderId - Optional folder ID to filter by
+   */
   async fetchTasks({ commit }, folderId = null) {
     commit('setLoading', true)
     try {
@@ -78,6 +148,13 @@ const actions = {
     }
   },
   
+  /**
+   * Add a new task
+   * @param {Object} context - Vuex context
+   * @param {Object} task - Task to add
+   * @returns {Promise<Object>} Added task
+   * @throws {Error} If task addition fails
+   */
   async addTask({ commit }, task) {
     commit('setLoading', true)
     try {
@@ -112,6 +189,13 @@ const actions = {
     }
   },
   
+  /**
+   * Update an existing task
+   * @param {Object} context - Vuex context
+   * @param {Object} payload - Payload containing task ID and updates
+   * @returns {Promise<Object>} Updated task
+   * @throws {Error} If task update fails
+   */
   async updateTask({ commit }, { id, updates }) {
     commit('setLoading', true)
     try {
@@ -146,6 +230,12 @@ const actions = {
     }
   },
   
+  /**
+   * Delete a task
+   * @param {Object} context - Vuex context
+   * @param {string} id - Task ID to delete
+   * @throws {Error} If task deletion fails
+   */
   async deleteTask({ commit }, id) {
     commit('setLoading', true)
     try {
@@ -161,6 +251,11 @@ const actions = {
     }
   },
   
+  /**
+   * Toggle task completion status
+   * @param {Object} context - Vuex context
+   * @param {string} id - Task ID to toggle
+   */
   toggleTaskCompletion({ dispatch, getters }, id) {
     const task = getters.taskById(id)
     if (task) {
@@ -171,6 +266,11 @@ const actions = {
     }
   },
   
+  /**
+   * Toggle task importance status
+   * @param {Object} context - Vuex context
+   * @param {string} id - Task ID to toggle
+   */
   toggleTaskImportance({ dispatch, getters }, id) {
     const task = getters.taskById(id)
     if (task) {
@@ -181,21 +281,45 @@ const actions = {
     }
   },
   
+  /**
+   * Set the selected task
+   * @param {Object} context - Vuex context
+   * @param {Object} task - Task to select
+   */
   setSelectedTask({ commit }, task) {
     commit('setSelectedTask', task)
   }
 }
 
+/**
+ * Mutations for the tasks module
+ * @type {Object}
+ */
 const mutations = {
+  /**
+   * Set all tasks
+   * @param {Object} state - Module state
+   * @param {Array} tasks - Array of task objects
+   */
   setTasks(state, tasks) {
     console.log('Setting tasks in state:', tasks)
     state.tasks = tasks
   },
   
+  /**
+   * Add a new task
+   * @param {Object} state - Module state
+   * @param {Object} task - Task to add
+   */
   addTask(state, task) {
     state.tasks.push(task)
   },
   
+  /**
+   * Update an existing task
+   * @param {Object} state - Module state
+   * @param {Object} payload - Payload containing task ID and updates
+   */
   updateTask(state, { id, updates }) {
     const index = state.tasks.findIndex(task => task.id === id)
     if (index !== -1) {
@@ -208,6 +332,11 @@ const mutations = {
     }
   },
   
+  /**
+   * Delete a task
+   * @param {Object} state - Module state
+   * @param {string} id - Task ID to delete
+   */
   deleteTask(state, id) {
     state.tasks = state.tasks.filter(task => task.id !== id)
     
@@ -217,14 +346,29 @@ const mutations = {
     }
   },
   
+  /**
+   * Set the selected task
+   * @param {Object} state - Module state
+   * @param {Object|null} task - Task to select or null
+   */
   setSelectedTask(state, task) {
     state.selectedTask = task
   },
   
+  /**
+   * Set loading state
+   * @param {Object} state - Module state
+   * @param {boolean} loading - Loading state
+   */
   setLoading(state, loading) {
     state.loading = loading
   },
   
+  /**
+   * Set error message
+   * @param {Object} state - Module state
+   * @param {string|null} error - Error message or null
+   */
   setError(state, error) {
     state.error = error
   }

@@ -39,21 +39,39 @@
 import { mapActions } from 'vuex'
 import TaskItem from './TaskItem.vue'
 
+/**
+ * TaskList component displays a list of tasks with various actions
+ * @component
+ */
 export default {
   name: 'TaskList',
+  
   components: {
     TaskItem
   },
+  
   props: {
+    /**
+     * Array of task objects to display
+     * @type {Array}
+     * @default []
+     */
     tasks: {
       type: Array,
       default: () => []
     },
+    
+    /**
+     * Whether the tasks are currently loading
+     * @type {Boolean}
+     * @default false
+     */
     loading: {
       type: Boolean,
       default: false
     }
   },
+  
   methods: {
     ...mapActions('tasks', [
       'updateTask',
@@ -62,18 +80,34 @@ export default {
       'toggleTaskImportance'
     ]),
     
+    /**
+     * Emits select-task event with the selected task
+     * @param {Object} task - The selected task
+     */
     selectTask(task) {
       this.$emit('select-task', task)
     },
     
+    /**
+     * Toggles task completion status
+     * @param {string} taskId - ID of the task to toggle
+     */
     toggleComplete(taskId) {
       this.toggleTaskCompletion(taskId)
     },
     
+    /**
+     * Toggles task importance status
+     * @param {string} taskId - ID of the task to toggle
+     */
     toggleImportant(taskId) {
       this.toggleTaskImportance(taskId)
     },
     
+    /**
+     * Emits go-do event with the task to start
+     * @param {Object} task - The task to start
+     */
     goDoTask(task) {
       this.$emit('go-do', task)
     }

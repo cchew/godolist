@@ -17,8 +17,13 @@
 <script>
 import ChatsList from '@/components/chats/ChatsList'
 
+/**
+ * Chats view component provides the chat interface layout
+ * @component
+ */
 export default {
   name: 'ChatsView',
+  
   components: {
     ChatsList
   }

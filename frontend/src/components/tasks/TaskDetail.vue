@@ -152,14 +152,25 @@
 import { mapGetters, mapActions } from 'vuex'
 import { format } from 'date-fns'
 
+/**
+ * TaskDetail component displays and allows editing of a task's details
+ * @component
+ */
 export default {
   name: 'TaskDetail',
+  
   props: {
+    /**
+     * The task object to display and edit
+     * @type {Object}
+     * @required
+     */
     task: {
       type: Object,
       required: true
     }
   },
+  
   data() {
     return {
       completed: this.task.completed,
@@ -171,30 +182,50 @@ export default {
       dateMenu: false
     }
   },
+  
   computed: {
     ...mapGetters('lists', ['allLists']),
     
+    /**
+     * List of available task lists
+     * @returns {Array} Array of list objects
+     */
     lists() {
       return this.allLists
     },
     
+    /**
+     * Formatted due date string
+     * @returns {string} Formatted date string
+     */
     formattedDate() {
       if (!this.dueDate) return ''
       return format(new Date(this.dueDate), 'MMM d, yyyy')
     },
     
+    /**
+     * Formatted creation date string
+     * @returns {string} Formatted date string
+     */
     formattedCreatedDate() {
       if (!this.task.createdAt) return ''
       return format(new Date(this.task.createdAt), 'MMM d, yyyy')
     }
   },
+  
   methods: {
     ...mapActions('tasks', ['updateTask', 'deleteTask']),
     
+    /**
+     * Emits close event to parent
+     */
     closeDetail() {
       this.$emit('close')
     },
     
+    /**
+     * Updates task completion status
+     */
     updateTaskStatus() {
       this.updateTask({
         id: this.task.id,
@@ -202,6 +233,9 @@ export default {
       })
     },
     
+    /**
+     * Updates task title
+     */
     updateTitle() {
       if (!this.title.trim()) {
         this.title = this.task.title
@@ -213,6 +247,9 @@ export default {
       })
     },
     
+    /**
+     * Updates task description
+     */
     updateDescription() {
       this.updateTask({
         id: this.task.id,
@@ -220,6 +257,9 @@ export default {
       })
     },
     
+    /**
+     * Updates task due date
+     */
     updateDueDate() {
       this.dateMenu = false
       this.updateTask({
@@ -228,6 +268,9 @@ export default {
       })
     },
     
+    /**
+     * Updates task importance
+     */
     updateImportance() {
       this.updateTask({
         id: this.task.id,
@@ -235,6 +278,9 @@ export default {
       })
     },
     
+    /**
+     * Updates task list
+     */
     updateTaskList() {
       this.updateTask({
         id: this.task.id,
@@ -242,10 +288,13 @@ export default {
       })
     },
     
+    /**
+     * Confirms and deletes the task
+     */
     confirmDelete() {
-      if (confirm(`Delete task "${this.task.title}"?`)) {
+      if (confirm(`Delete task "${this.title}"?`)) {
         this.deleteTask(this.task.id)
-        this.$emit('close')
+        this.closeDetail()
       }
     }
   },

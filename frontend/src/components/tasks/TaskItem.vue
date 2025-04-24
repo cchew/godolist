@@ -92,15 +92,30 @@
 <script>
 import { format, isPast, isToday } from 'date-fns'
 
+/**
+ * TaskItem component displays a single task with actions
+ * @component
+ */
 export default {
   name: 'TaskItem',
+  
   props: {
+    /**
+     * The task object to display
+     * @type {Object}
+     * @required
+     */
     task: {
       type: Object,
       required: true
     }
   },
+  
   computed: {
+    /**
+     * Task completion status with getter/setter
+     * @type {Boolean}
+     */
     isCompleted: {
       get() {
         return this.task.completed
@@ -110,6 +125,10 @@ export default {
       }
     },
     
+    /**
+     * Formatted due date string
+     * @returns {string} Formatted date string
+     */
     formattedDueDate() {
       if (!this.task.dueDate) return ''
       
@@ -122,6 +141,10 @@ export default {
       return format(date, 'MMM d')
     },
     
+    /**
+     * Whether the task is overdue
+     * @returns {Boolean} True if task is overdue
+     */
     isOverdue() {
       if (!this.task.dueDate || this.task.completed) return false
       
@@ -129,29 +152,48 @@ export default {
       return isPast(dueDate) && !isToday(dueDate)
     }
   },
+  
   methods: {
+    /**
+     * Emits select event with the task
+     */
     selectTask() {
       this.$emit('select', this.task)
     },
     
+    /**
+     * Emits toggle-complete event with task ID
+     */
     toggleComplete() {
       this.$emit('toggle-complete', this.task.id)
     },
     
+    /**
+     * Emits toggle-important event with task ID
+     */
     toggleImportant() {
       this.$emit('toggle-important', this.task.id)
     },
     
+    /**
+     * Emits update event with the task
+     */
     editTask() {
       this.$emit('update', this.task)
     },
     
+    /**
+     * Confirms and emits delete event with task ID
+     */
     confirmDeleteTask() {
       if (confirm(`Delete task "${this.task.title}"?`)) {
         this.$emit('delete', this.task.id)
       }
     },
     
+    /**
+     * Emits go-do event with the task
+     */
     goDoTask() {
       this.$emit('go-do', this.task)
     }

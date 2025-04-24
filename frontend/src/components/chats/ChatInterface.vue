@@ -158,18 +158,35 @@ marked.setOptions({
   breaks: true
 })
 
+/**
+ * ChatInterface component provides a chat interface for task-related conversations
+ * @component
+ */
 export default {
   name: 'ChatInterface',
+  
   props: {
+    /**
+     * The task object associated with this chat
+     * @type {Object}
+     * @required
+     */
     task: {
       type: Object,
       required: true
     },
+    
+    /**
+     * Array of chat messages
+     * @type {Array}
+     * @default []
+     */
     messages: {
       type: Array,
       default: () => []
     }
   },
+  
   data() {
     return {
       newMessage: '',
@@ -182,16 +199,31 @@ export default {
       messageFeedback: {} // Track feedback state for each message
     }
   },
+  
   computed: {
+    /**
+     * Whether this is a historical chat with existing messages
+     * @returns {boolean} True if chat has existing messages
+     */
     isHistoricalChat() {
       return this.messages.length > 0
     },
     
+    /**
+     * Messages to display in the chat
+     * @returns {Array} Array of messages to display
+     */
     displayMessages() {
       return this.isHistoricalChat ? this.messages : this.localMessages
     }
   },
+  
   methods: {
+    /**
+     * Formats message text with markdown and syntax highlighting
+     * @param {string} text - Message text to format
+     * @returns {string} Formatted HTML
+     */
     formatMessage(text) {
       // Convert markdown to HTML
       const html = marked(text)
@@ -200,107 +232,119 @@ export default {
       return html.replace(/<pre>/g, '<pre class="code-block">')
     },
     
-    formatTime(date) {
-      return new Date(date).toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: true 
-      }).toLowerCase()
+    /**
+     * Formats timestamp for display
+     * @param {Date|string} timestamp - Timestamp to format
+     * @returns {string} Formatted time string
+     */
+    formatTime(timestamp) {
+      const date = new Date(timestamp)
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     },
     
-    handleFeedback(message, type) {
-      const messageId = message.id || message.timestamp // Use timestamp as fallback ID
-      
-      // If clicking the same type, remove feedback
-      if (this.messageFeedback[messageId] === type) {
-        delete this.messageFeedback[messageId]
-      } else {
-        // Otherwise, update feedback
-        this.messageFeedback[messageId] = type
+    /**
+     * Handles enter key press in message input
+     * @param {KeyboardEvent} event - Keyboard event
+     */
+    handleEnter(event) {
+      if (!event.shiftKey) {
+        this.sendMessage()
       }
-      
-      // TODO: Implement feedback submission
-      console.log(`Feedback ${type} for message:`, message)
     },
     
-    isFeedbackSelected(message, type) {
-      const messageId = message.id || message.timestamp
-      return this.messageFeedback[messageId] === type
-    },
-    
-    openFeedbackDialog(message) {
-      this.selectedMessage = message
-      this.feedbackText = ''
-      this.isPrivateFeedback = true
-      this.createGitHubIssue = false
-      this.showFeedbackDialog = true
-    },
-    
-    submitFeedback() {
-      if (!this.feedbackText) return
+    /**
+     * Sends a new message
+     */
+    sendMessage() {
+      if (!this.newMessage.trim()) return
       
-      const feedback = {
-        message: this.selectedMessage,
-        text: this.feedbackText,
-        isPrivate: this.isPrivateFeedback,
-        createGitHubIssue: this.createGitHubIssue
-      }
-      
-      console.log('Submitting feedback:', feedback)
-      // TODO: Implement feedback submission
-      
-      this.showFeedbackDialog = false
-    },
-    
-    async sendMessage() {
-      const message = this.newMessage.trim()
-      if (!message) return
-      
-      // Add user message
-      const userMessage = {
+      const message = {
         role: 'user',
-        content: message,
+        content: this.newMessage.trim(),
         timestamp: new Date()
       }
       
-      if (this.isHistoricalChat) {
-        this.$emit('send-message', message)
-      } else {
-        this.localMessages.push(userMessage)
-      }
-      
+      this.localMessages.push(message)
+      this.$emit('send-message', message)
       this.newMessage = ''
       
-      // Scroll to bottom
+      // Scroll to bottom after message is added
       this.$nextTick(() => {
         this.scrollToBottom()
       })
-      
-      if (!this.isHistoricalChat) {
-        // Simulate AI response (replace with actual API call)
-        setTimeout(() => {
-          this.localMessages.push({
-            role: 'assistant',
-            content: `I'm here to help with "${this.task.title}". Let me assist you with that.`,
-            timestamp: new Date()
-          })
-          
-          // Scroll to bottom after response
-          this.$nextTick(() => {
-            this.scrollToBottom()
-          })
-        }, 1000)
+    },
+    
+    /**
+     * Scrolls chat to bottom
+     */
+    scrollToBottom() {
+      const container = this.$refs.messagesContainer
+      if (container) {
+        container.scrollTop = container.scrollHeight
       }
     },
     
-    handleEnter(e) {
-      if (e.shiftKey) return
-      this.sendMessage()
+    /**
+     * Checks if feedback is selected for a message
+     * @param {Object} message - Message to check
+     * @param {string} type - Feedback type ('up' or 'down')
+     * @returns {boolean} True if feedback is selected
+     */
+    isFeedbackSelected(message, type) {
+      return this.messageFeedback[message.id] === type
     },
     
-    scrollToBottom() {
-      const container = this.$refs.messagesContainer
-      container.scrollTop = container.scrollHeight
+    /**
+     * Handles feedback selection for a message
+     * @param {Object} message - Message to provide feedback for
+     * @param {string} type - Feedback type ('up' or 'down')
+     */
+    handleFeedback(message, type) {
+      this.messageFeedback[message.id] = type
+      this.$emit('feedback', { message, type })
+    },
+    
+    /**
+     * Opens feedback dialog for a message
+     * @param {Object} message - Message to provide feedback for
+     */
+    openFeedbackDialog(message) {
+      this.selectedMessage = message
+      this.feedbackText = ''
+      this.showFeedbackDialog = true
+    },
+    
+    /**
+     * Submits feedback for a message
+     */
+    submitFeedback() {
+      if (!this.feedbackText.trim()) return
+      
+      this.$emit('feedback', {
+        message: this.selectedMessage,
+        type: 'text',
+        text: this.feedbackText.trim(),
+        isPrivate: this.isPrivateFeedback,
+        createIssue: this.createGitHubIssue
+      })
+      
+      this.showFeedbackDialog = false
+      this.feedbackText = ''
+      this.selectedMessage = null
+    }
+  },
+  
+  watch: {
+    /**
+     * Watches messages changes and scrolls to bottom
+     */
+    messages: {
+      handler() {
+        this.$nextTick(() => {
+          this.scrollToBottom()
+        })
+      },
+      deep: true
     }
   }
 }

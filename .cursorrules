@@ -1,6 +1,7 @@
 # Development standards
 
 1. Ensure that all code are properly documented and formatted.
+1. If renaming methods to comply with standards, ensure that calling code uses the updated name.
 
 # Python 
 

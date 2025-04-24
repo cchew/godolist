@@ -72,27 +72,47 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 
+/**
+ * AppHeader component provides the main application header with search and user menu
+ * @component
+ */
 export default {
   name: 'AppHeader',
+  
   props: {
+    /**
+     * Header title
+     * @type {string}
+     * @default 'Tasks'
+     */
     title: {
       type: String,
       default: 'Tasks'
     }
   },
+  
   data() {
     return {
       searchQuery: ''
     }
   },
+  
   computed: {
     ...mapGetters('auth', ['currentUser']),
     ...mapGetters('tasks', ['searchTasks']),
     
+    /**
+     * Current user object
+     * @returns {Object} User object
+     */
     user() {
       return this.currentUser
     },
     
+    /**
+     * User's initials for avatar
+     * @returns {string} User's initials
+     */
     userInitials() {
       if (!this.user?.displayName) return '?'
       return this.user.displayName
@@ -102,15 +122,23 @@ export default {
         .toUpperCase()
     },
 
+    /**
+     * Filtered tasks based on search query
+     * @returns {Array} Filtered tasks
+     */
     filteredTasks() {
       const currentListId = this.$route.params.listId || 'all'
       return this.searchTasks(this.searchQuery, currentListId)
     }
   },
+  
   methods: {
     ...mapActions('auth', ['logout']),
     ...mapActions('tasks', ['setSelectedTask']),
     
+    /**
+     * Handles user logout
+     */
     async handleLogout() {
       try {
         await this.logout()
@@ -120,7 +148,12 @@ export default {
       }
     }
   },
+  
   watch: {
+    /**
+     * Watches search query changes and emits search event
+     * @param {string} val - New search query value
+     */
     searchQuery(val) {
       this.$emit('search', this.filteredTasks)
     }

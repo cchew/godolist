@@ -238,8 +238,13 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 
+/**
+ * AppNavigation component provides the main navigation drawer for the application
+ * @component
+ */
 export default {
   name: 'AppNavigation',
+  
   data() {
     return {
       drawer: true,
@@ -250,88 +255,119 @@ export default {
       selectedListToDelete: null,
       listForm: {
         name: '',
-        icon: 'mdi-format-list-bulleted',
+        icon: 'mdi-folder',
         color: 'primary'
       },
       listIcons: [
-        { title: 'List', value: 'mdi-format-list-bulleted' },
-        { title: 'Home', value: 'mdi-home' },
-        { title: 'Work', value: 'mdi-briefcase' },
-        { title: 'Shopping', value: 'mdi-cart' },
-        { title: 'School', value: 'mdi-school' },
-        { title: 'Personal', value: 'mdi-account' },
-        { title: 'Health', value: 'mdi-heart' },
-        { title: 'Travel', value: 'mdi-airplane' },
-        { title: 'Finance', value: 'mdi-currency-usd' }
+        { title: 'Folder', value: 'mdi-folder' },
+        { title: 'Star', value: 'mdi-star' },
+        { title: 'Heart', value: 'mdi-heart' },
+        { title: 'Flag', value: 'mdi-flag' },
+        { title: 'Bookmark', value: 'mdi-bookmark' },
+        { title: 'Tag', value: 'mdi-tag' }
       ],
       listColors: [
-        { label: 'Blue', value: 'primary' },
-        { label: 'Red', value: 'error' },
-        { label: 'Green', value: 'success' },
-        { label: 'Orange', value: 'warning' },
-        { label: 'Purple', value: 'purple' }
+        { label: 'Primary', value: 'primary' },
+        { label: 'Secondary', value: 'secondary' },
+        { label: 'Success', value: 'success' },
+        { label: 'Info', value: 'info' },
+        { label: 'Warning', value: 'warning' },
+        { label: 'Error', value: 'error' }
       ]
     }
   },
+  
   computed: {
     ...mapGetters('lists', ['allLists']),
     
-    lists() {
-      return this.allLists
+    /**
+     * Current route name
+     * @returns {string} Current route name
+     */
+    currentRoute() {
+      return this.$route.params.listId || this.$route.name
     },
     
-    currentRoute() {
-      if (this.$route.path === '/chats') {
-        return 'chats'
-      }
-      return this.$route.params.listId || 'all'
+    /**
+     * List of available lists
+     * @returns {Array} Array of list objects
+     */
+    lists() {
+      return this.allLists
     }
   },
+  
   methods: {
     ...mapActions('lists', ['addList', 'updateList', 'deleteList']),
     
+    /**
+     * Handles rail state change
+     * @param {boolean} value - New rail state
+     */
     handleRailChange(value) {
       this.rail = value
     },
     
+    /**
+     * Opens new list dialog
+     */
     openNewListDialog() {
       this.editingList = null
       this.listForm = {
         name: '',
-        icon: 'mdi-format-list-bulleted',
+        icon: 'mdi-folder',
         color: 'primary'
       }
       this.showListDialog = true
     },
     
+    /**
+     * Opens edit list dialog
+     * @param {Object} list - List to edit
+     */
     editList(list) {
       this.editingList = list
       this.listForm = {
         name: list.name,
-        icon: list.icon,
-        color: list.color
+        icon: list.icon || 'mdi-folder',
+        color: list.color || 'primary'
       }
       this.showListDialog = true
     },
     
-    saveList() {
+    /**
+     * Saves list changes
+     */
+    async saveList() {
       if (!this.listForm.name) return
       
-      if (this.editingList) {
-        this.updateList({
-          id: this.editingList.id,
-          updates: this.listForm
-        })
-      } else {
-        this.addList(this.listForm)
+      try {
+        if (this.editingList) {
+          await this.updateList({
+            id: this.editingList.id,
+            updates: this.listForm
+          })
+        } else {
+          await this.addList(this.listForm)
+        }
+        this.showListDialog = false
+      } catch (error) {
+        console.error('Error saving list:', error)
       }
-      
-      this.showListDialog = false
     },
     
-    confirmDeleteList(list) {
-      this.selectedListToDelete = list
-      this.showDeleteDialog = true
+    /**
+     * Confirms and deletes a list
+     * @param {Object} list - List to delete
+     */
+    async confirmDeleteList(list) {
+      if (confirm(`Delete list "${list.name}"?`)) {
+        try {
+          await this.deleteList(list.id)
+        } catch (error) {
+          console.error('Error deleting list:', error)
+        }
+      }
     },
     
     deleteListConfirmed() {

@@ -1,3 +1,8 @@
+/**
+ * Vue Router configuration
+ * @module router
+ */
+
 import { createRouter, createWebHistory } from 'vue-router'
 import store from '@/store'
 
@@ -6,6 +11,10 @@ import Login from '@/views/Login'
 import Dashboard from '@/views/Dashboard'
 import ChatDetail from '@/components/chats/ChatDetail'
 
+/**
+ * Application routes configuration
+ * @type {Array<Object>}
+ */
 const routes = [
   {
     path: '/',
@@ -37,12 +46,18 @@ const routes = [
   }
 ]
 
+/**
+ * Vue Router instance
+ * @type {Router}
+ */
 const router = createRouter({
   history: createWebHistory(),
   routes
 })
 
-// Navigation guard
+/**
+ * Navigation guard to handle authentication
+ */
 router.beforeEach((to, from, next) => {
   // TODO: Re-enable authentication when ready
   next()

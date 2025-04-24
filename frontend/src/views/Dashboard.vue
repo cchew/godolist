@@ -91,8 +91,13 @@ import TaskFormDialog from '@/components/tasks/TaskFormDialog'
 import ChatList from '@/components/chats/ChatList'
 import ChatInterface from '@/components/chats/ChatInterface'
 
+/**
+ * Dashboard component provides the main application interface
+ * @component
+ */
 export default {
   name: 'Dashboard',
+  
   components: {
     AppNavigation,
     AppHeader,
@@ -102,6 +107,7 @@ export default {
     ChatList,
     ChatInterface
   },
+  
   data() {
     return {
       showTaskDialog: false,
@@ -112,24 +118,41 @@ export default {
       selectedChat: null
     }
   },
+  
   computed: {
     ...mapGetters('auth', ['currentUser']),
     ...mapGetters('tasks', ['tasksByList', 'isLoading', 'selectedTask']),
     ...mapGetters('lists', ['getListById']),
     ...mapGetters('chats', ['allChats']),
     
+    /**
+     * Whether tasks are currently loading
+     * @returns {boolean} True if tasks are loading
+     */
     tasksLoading() {
       return this.isLoading
     },
     
+    /**
+     * Whether current route is chats
+     * @returns {boolean} True if on chats route
+     */
     isChatsRoute() {
       return this.$route.path === '/chats'
     },
     
+    /**
+     * Current list ID from route
+     * @returns {string} List ID
+     */
     currentListId() {
       return this.$route.params.listId || 'all'
     },
     
+    /**
+     * Current list title for display
+     * @returns {string} List title
+     */
     currentListTitle() {
       if (this.chatMode) {
         return this.chatTask.title
@@ -149,6 +172,10 @@ export default {
       }
     },
     
+    /**
+     * Filtered tasks based on current list and search
+     * @returns {Array} Filtered tasks
+     */
     filteredTasks() {
       console.log('Filtering tasks for listId:', this.currentListId)
       const tasks = this.tasksByList(this.currentListId)
@@ -156,7 +183,11 @@ export default {
       return this.searchResults || tasks
     }
   },
+  
   watch: {
+    /**
+     * Watches route changes to update tasks and state
+     */
     $route: {
       immediate: true,
       handler(to) {
@@ -176,20 +207,33 @@ export default {
       }
     }
   },
+  
+  /**
+   * Lifecycle hook that initializes data
+   */
   created() {
     if (this.currentUser) {
       this.fetchLists()
       // Initial task fetch will be handled by the route watcher
     }
   },
+  
   methods: {
     ...mapActions('tasks', ['fetchTasks', 'addTask', 'updateTask', 'setSelectedTask']),
     ...mapActions('lists', ['fetchLists']),
     
+    /**
+     * Selects a task for detail view
+     * @param {Object} task - Task to select
+     */
     selectTask(task) {
       this.setSelectedTask(task)
     },
     
+    /**
+     * Selects a chat for chat mode
+     * @param {Object} chat - Chat to select
+     */
     selectChat(chat) {
       this.selectedChat = chat
       this.chatMode = true
@@ -198,47 +242,72 @@ export default {
       }
     },
     
-    closeTaskDetail() {
-      this.setSelectedTask(null)
+    /**
+     * Handles search results
+     * @param {Array} results - Search results
+     */
+    handleSearch(results) {
+      this.searchResults = results
     },
     
+    /**
+     * Clears search results
+     */
+    clearSearch() {
+      this.searchResults = null
+    },
+    
+    /**
+     * Opens add task dialog
+     */
     openAddTaskDialog() {
       this.editingTask = null
       this.showTaskDialog = true
     },
     
-    saveTask(task) {
-      if (task.id) {
-        this.updateTask({
-          id: task.id,
-          updates: task
-        })
-      } else {
-        this.addTask({
-          ...task,
-          folder_id: this.currentListId === 'all' ? null : this.currentListId
-        })
+    /**
+     * Saves task changes
+     * @param {Object} task - Task to save
+     */
+    async saveTask(task) {
+      try {
+        if (task.id) {
+          await this.updateTask({
+            id: task.id,
+            updates: task
+          })
+        } else {
+          await this.addTask(task)
+        }
+        this.showTaskDialog = false
+      } catch (error) {
+        console.error('Error saving task:', error)
       }
-      this.showTaskDialog = false
     },
     
-    handleSearch(results) {
-      this.searchResults = results
-    },
-    
-    clearSearch() {
-      this.searchResults = null
-    },
-    
+    /**
+     * Starts chat mode for a task
+     * @param {Object} task - Task to chat about
+     */
     startChatMode(task) {
-      this.chatTask = task
       this.chatMode = true
-      this.closeTaskDetail()
+      this.chatTask = task
     },
     
+    /**
+     * Exits chat mode
+     */
     exitChatMode() {
       this.chatMode = false
       this.chatTask = null
+      this.selectedChat = null
+    },
+    
+    /**
+     * Closes task detail view
+     */
+    closeTaskDetail() {
+      this.setSelectedTask(null)
     }
   }
 }

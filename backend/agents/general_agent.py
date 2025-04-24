@@ -200,8 +200,12 @@ class GeneralAgent:
         """
         if not self.agent:
             raise Exception("Agent not initialized. Call initialize_agent first.")
-        
-        return self.agent.run(query)
+
+        try:
+            response = self.agent.run(query)
+            return response
+        except Exception as e:
+            raise Exception(f"Error processing task: {str(e)}")
 
 # Usage example:
 """

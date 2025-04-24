@@ -42,16 +42,31 @@
 <script>
 import { mapActions, mapGetters } from 'vuex'
 
+/**
+ * Login component provides user authentication
+ * @component
+ */
 export default {
   name: 'Login',
+  
   computed: {
     ...mapGetters('auth', ['error', 'isLoading']),
+    
+    /**
+     * Whether authentication is in progress
+     * @returns {boolean} True if loading
+     */
     loading() {
       return this.isLoading
     }
   },
+  
   methods: {
     ...mapActions('auth', ['googleLogin']),
+    
+    /**
+     * Handles Google sign-in
+     */
     async signInWithGoogle() {
       // TODO: Re-enable authentication when ready
       // Previous implementation: await this.googleLogin()

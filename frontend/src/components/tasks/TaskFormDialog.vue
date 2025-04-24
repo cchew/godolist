@@ -109,23 +109,47 @@
 import { mapGetters } from 'vuex'
 import { format } from 'date-fns'
 
+/**
+ * TaskFormDialog component provides a form for creating and editing tasks
+ * @component
+ */
 export default {
   name: 'TaskFormDialog',
+  
   props: {
+    /**
+     * Whether the dialog is visible
+     * @type {Boolean}
+     * @default false
+     */
     modelValue: {
       type: Boolean,
       default: false
     },
+    
+    /**
+     * Task object to edit (null for new task)
+     * @type {Object}
+     * @default null
+     */
     task: {
       type: Object,
       default: null
     },
+    
+    /**
+     * ID of the list to assign the task to
+     * @type {String}
+     * @default 'default'
+     */
     listId: {
       type: String,
       default: 'default'
     }
   },
+  
   emits: ['update:modelValue', 'save'],
+  
   data() {
     return {
       taskForm: {
@@ -139,18 +163,31 @@ export default {
       dateMenu: false
     }
   },
+  
   computed: {
     ...mapGetters('lists', ['allLists']),
     
+    /**
+     * List of available lists
+     * @returns {Array} Array of list objects
+     */
     lists() {
       return this.allLists
     },
     
+    /**
+     * Formatted due date string
+     * @returns {string} Formatted date string
+     */
     formattedDate() {
       if (!this.taskForm.dueDate) return ''
       return format(new Date(this.taskForm.dueDate), 'MMM d, yyyy')
     },
     
+    /**
+     * Default list ID to use
+     * @returns {string} List ID
+     */
     defaultListId() {
       // Use the provided listId, but only if it's a valid custom list (not special filters)
       if (this.listId === 'all' || this.listId === 'important' || this.listId === 'completed') {
@@ -159,14 +196,23 @@ export default {
       return this.listId
     }
   },
+  
   watch: {
+    /**
+     * Watches dialog visibility to initialize form
+     * @param {boolean} val - New visibility value
+     */
     modelValue(val) {
       if (val) {
         this.initForm()
       }
     }
   },
+  
   methods: {
+    /**
+     * Initializes the form with task data
+     */
     initForm() {
       if (this.task) {
         // Edit existing task
@@ -191,6 +237,9 @@ export default {
       }
     },
     
+    /**
+     * Saves the task form
+     */
     saveTask() {
       if (!this.taskForm.title) return
       
@@ -198,6 +247,7 @@ export default {
       this.$emit('update:modelValue', false)
     }
   },
+  
   created() {
     this.initForm()
   }

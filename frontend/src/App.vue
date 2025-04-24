@@ -9,8 +9,16 @@
 </template>
 
 <script>
+/**
+ * Root application component
+ * @component
+ */
 export default {
   name: 'App',
+  
+  /**
+   * Lifecycle hook that initializes authentication
+   */
   created() {
     this.$store.dispatch('auth/initAuth')
   }
