@@ -1,7 +1,6 @@
 # Development standards
 
 1. Ensure that all code are properly documented and formatted.
-1. If renaming methods to comply with standards, ensure that calling code uses the updated name.
 
 # Python 
 
@@ -15,5 +14,15 @@
 1. Format as per Vue Style Guide
 1. Document using JSDoc
 
-# Vuex
-1. For mutations, always use camelCase (for example 'setTask')
+
+# Naming conventions
+1. Vuex mutations: camelCase
+
+# Method Renaming Guidelines
+
+1. When renaming methods, follow these steps:
+   - First, search for all occurrences of the method name across the codebase
+   - Update all references to the method in the same commit
+   - For Vue components, update both the method definition and template references
+   - For Vuex modules, update actions, mutations, and any component dispatches/commits
+   - For Python files, update both the method definition and all import statements
