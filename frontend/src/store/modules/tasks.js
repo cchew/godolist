@@ -165,17 +165,21 @@ const actions = {
         notes: task.description || task.notes || '',
         completed: false,
         isImportant: task.important || task.isImportant || false,
-        folder_id: task.folder_id || task.listId || null
+        folder_id: task.folder_id || task.listId || null,
+        dueDate: task.dueDate
       }
       
       const response = await axios.post('http://127.0.0.1:5000/tasks', apiTask)
+      console.log('Task creation response:', response.data)
       
       // Map backend response back to frontend field names
       const newTask = {
         ...response.data,
         description: response.data.notes,
         important: response.data.isImportant,
-        listId: response.data.folder_id
+        listId: response.data.folder_id,
+        dueDate: response.data.dueDate,
+        createdAt: response.data.createdAt
       }
       
       commit('addTask', newTask)
@@ -206,17 +210,21 @@ const actions = {
         notes: updates.description || updates.notes,
         completed: updates.completed,
         isImportant: updates.important || updates.isImportant,
-        folder_id: updates.folder_id || updates.listId
+        folder_id: updates.folder_id || updates.listId,
+        dueDate: updates.dueDate
       }
       
       const response = await axios.patch(`http://127.0.0.1:5000/tasks?id=${id}`, apiUpdates)
+      console.log('Task update response:', response.data)
       
       // Map backend response back to frontend field names
       const frontendUpdates = {
         ...response.data,
         description: response.data.notes,
         important: response.data.isImportant,
-        listId: response.data.folder_id
+        listId: response.data.folder_id,
+        dueDate: response.data.dueDate,
+        createdAt: response.data.createdAt
       }
       
       commit('updateTask', { id, updates: frontendUpdates })

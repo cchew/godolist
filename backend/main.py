@@ -16,6 +16,7 @@ from agno.document.chunking.document import DocumentChunking
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
 from agents.general_agent import GeneralAgent
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -68,6 +69,8 @@ def init_db():
                 completed BOOLEAN NOT NULL DEFAULT 0,
                 is_important BOOLEAN NOT NULL DEFAULT 0,
                 notes TEXT,
+                due_date TEXT,
+                created_at TEXT NOT NULL DEFAULT '2025-04-14T13:00:00',
                 FOREIGN KEY (folder_id) REFERENCES folders (id)
             )
         ''')
@@ -187,11 +190,11 @@ def manage_tasks():
             cursor = conn.cursor()
             if folder_id:
                 cursor.execute('''
-                    SELECT id, folder_id, title, completed, is_important, notes 
+                    SELECT id, folder_id, title, completed, is_important, notes, due_date, created_at 
                     FROM tasks WHERE folder_id = ?
                 ''', (folder_id,))
             else:
-                cursor.execute('SELECT id, folder_id, title, completed, is_important, notes FROM tasks')
+                cursor.execute('SELECT id, folder_id, title, completed, is_important, notes, due_date, created_at FROM tasks')
             
             tasks = []
             for row in cursor.fetchall():
@@ -201,7 +204,9 @@ def manage_tasks():
                     'title': row['title'],
                     'completed': bool(row['completed']),
                     'isImportant': bool(row['is_important']),
-                    'notes': row['notes']
+                    'notes': row['notes'],
+                    'dueDate': row['due_date'],
+                    'createdAt': row['created_at']
                 })
             return jsonify(tasks)
 
@@ -219,14 +224,16 @@ def manage_tasks():
                     folder_id = None
                 
                 cursor.execute(
-                    '''INSERT INTO tasks (folder_id, title, completed, is_important, notes) 
-                       VALUES (?, ?, ?, ?, ?)''',
+                    '''INSERT INTO tasks (folder_id, title, completed, is_important, notes, due_date, created_at) 
+                       VALUES (?, ?, ?, ?, ?, ?, ?)''',
                     (
                         folder_id,  # Will be NULL in database if None
                         data['title'],
                         data.get('completed', False),
                         data.get('isImportant', False),
-                        data.get('notes', '')
+                        data.get('notes', ''),
+                        data.get('dueDate'),
+                        datetime.now().isoformat()
                     )
                 )
                 task_id = cursor.lastrowid
@@ -239,7 +246,9 @@ def manage_tasks():
                     'title': data['title'],
                     'completed': data.get('completed', False),
                     'isImportant': data.get('isImportant', False),
-                    'notes': data.get('notes', '')
+                    'notes': data.get('notes', ''),
+                    'dueDate': data.get('dueDate'),
+                    'createdAt': datetime.now().isoformat()
                 }), 201
                 
         except Exception as e:
@@ -285,6 +294,10 @@ def manage_tasks():
                     update_fields.append('folder_id = ?')
                     params.append(folder_id)
                 
+                if 'dueDate' in data:
+                    update_fields.append('due_date = ?')
+                    params.append(data['dueDate'])
+                
                 if not update_fields:
                     return jsonify({'error': 'No valid fields to update'}), 400
                 
@@ -302,7 +315,7 @@ def manage_tasks():
                 
                 # Return updated task
                 cursor.execute('''
-                    SELECT id, folder_id, title, completed, is_important, notes 
+                    SELECT id, folder_id, title, completed, is_important, notes, due_date, created_at 
                     FROM tasks WHERE id = ?
                 ''', (task_id,))
                 row = cursor.fetchone()
@@ -314,7 +327,9 @@ def manage_tasks():
                         'title': row[2],
                         'completed': bool(row[3]),
                         'isImportant': bool(row[4]),
-                        'notes': row[5]
+                        'notes': row[5],
+                        'dueDate': row[6],
+                        'createdAt': row[7]
                     })
                 else:
                     return jsonify({'error': 'Task not found'}), 404

@@ -209,7 +209,12 @@ export default {
      */
     formattedCreatedDate() {
       if (!this.task.createdAt) return ''
-      return format(new Date(this.task.createdAt), 'MMM d, yyyy')
+      try {
+        return format(new Date(this.task.createdAt), 'MMM d, yyyy')
+      } catch (error) {
+        console.error('Error formatting created date:', error)
+        return ''
+      }
     }
   },
   

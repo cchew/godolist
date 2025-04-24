@@ -93,12 +93,16 @@ const actions = {
     commit('setLoading', true)
     try {
       const response = await axios.post('http://127.0.0.1:5000/folders', {
-        name: list.name
+        name: list.name,
+        dueDate: list.dueDate,
+        createdAt: list.createdAt
       })
       
       const newList = {
         id: response.data.id,
-        name: response.data.name
+        name: response.data.name,
+        dueDate: response.data.dueDate,
+        createdAt: response.data.createdAt
       }
       
       commit('addList', newList)
@@ -123,7 +127,8 @@ const actions = {
       // First update the folder name
       if (updates.name) {
         await axios.patch(`http://127.0.0.1:5000/folders/${id}`, {
-          name: updates.name
+          name: updates.name,
+          dueDate: updates.dueDate
         })
       }
       
@@ -133,7 +138,8 @@ const actions = {
         for (const task of tasks) {
           await axios.patch('http://127.0.0.1:5000/tasks', {
             id: task.id,
-            folder_id: id
+            folder_id: id,
+            dueDate: task.dueDate
           })
         }
       }
