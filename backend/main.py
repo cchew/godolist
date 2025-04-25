@@ -457,6 +457,42 @@ def download_file(file_id):
         else:
             return jsonify({'error': 'File not found'}), 404
 
+@app.route('/files/<int:file_id>', methods=['DELETE'])
+def delete_file(file_id):
+    """
+    Delete a file.
+    
+    Args:
+        file_id (int): ID of the file to delete
+        
+    Returns:
+        Response: Empty response with 204 status code
+    """
+    try:
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            # Get file path before deleting
+            cursor.execute('SELECT file_path FROM task_files WHERE id = ?', (file_id,))
+            row = cursor.fetchone()
+            
+            if not row:
+                return jsonify({'error': 'File not found'}), 404
+                
+            file_path = row[0]
+            
+            # Delete from database
+            cursor.execute('DELETE FROM task_files WHERE id = ?', (file_id,))
+            conn.commit()
+            
+            # Delete physical file
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                
+            return '', 204
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/process-task', methods=['POST'])
 def process_task():
     """

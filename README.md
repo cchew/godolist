@@ -127,7 +127,7 @@ The application consists of three main components:
 
 ## Contributing
 
-[Vontribution guidelines later]
+[Contribution guidelines later]
 
 ## License
 

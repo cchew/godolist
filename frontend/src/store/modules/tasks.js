@@ -296,6 +296,98 @@ const actions = {
    */
   setSelectedTask({ commit }, task) {
     commit('setSelectedTask', task)
+  },
+  
+  /**
+   * Upload a file for a task
+   * @param {Object} context - Vuex context
+   * @param {Object} payload - Payload containing task ID and file
+   * @returns {Promise<Object>} Uploaded file data
+   * @throws {Error} If file upload fails
+   */
+  async uploadTaskFile({ commit }, { taskId, file }) {
+    commit('setLoading', true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      const response = await axios.post(`http://127.0.0.1:5000/tasks/${taskId}/files`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      
+      return response.data
+    } catch (error) {
+      console.error('Error uploading file:', error)
+      commit('setError', error.response?.data?.error || error.message)
+      throw error
+    } finally {
+      commit('setLoading', false)
+    }
+  },
+  
+  /**
+   * Get files for a task
+   * @param {Object} context - Vuex context
+   * @param {string} taskId - Task ID to get files for
+   * @returns {Promise<Array>} Array of file objects
+   * @throws {Error} If getting files fails
+   */
+  async getTaskFiles({ commit }, taskId) {
+    commit('setLoading', true)
+    try {
+      const response = await axios.get(`http://127.0.0.1:5000/tasks/${taskId}/files`)
+      return response.data
+    } catch (error) {
+      console.error('Error getting task files:', error)
+      commit('setError', error.response?.data?.error || error.message)
+      throw error
+    } finally {
+      commit('setLoading', false)
+    }
+  },
+  
+  /**
+   * Download a file
+   * @param {Object} context - Vuex context
+   * @param {string} fileId - File ID to download
+   * @returns {Promise<Blob>} File blob
+   * @throws {Error} If file download fails
+   */
+  async downloadFile({ commit }, fileId) {
+    commit('setLoading', true)
+    try {
+      const response = await axios.get(`http://127.0.0.1:5000/files/${fileId}`, {
+        responseType: 'blob'
+      })
+      return response.data
+    } catch (error) {
+      console.error('Error downloading file:', error)
+      commit('setError', error.response?.data?.error || error.message)
+      throw error
+    } finally {
+      commit('setLoading', false)
+    }
+  },
+  
+  /**
+   * Delete a file
+   * @param {Object} context - Vuex context
+   * @param {string} fileId - File ID to delete
+   * @throws {Error} If file deletion fails
+   */
+  async deleteFile({ commit }, fileId) {
+    commit('setLoading', true)
+    try {
+      await axios.delete(`http://127.0.0.1:5000/files/${fileId}`)
+    } catch (error) {
+      console.error('Error deleting file:', error)
+      commit('setError', error.response?.data?.error || error.message)
+      throw error
+    } finally {
+      commit('setLoading', false)
+    }
   }
 }
 

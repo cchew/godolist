@@ -130,6 +130,59 @@
       </v-card-text>
     </v-card>
     
+    <v-card variant="outlined" class="mb-4">
+      <v-card-text>
+        <div class="d-flex flex-column">
+          <div class="d-flex align-center">
+            <v-icon color="primary" class="mr-3">mdi-file-document</v-icon>
+            <div class="w-100">
+              <div class="text-subtitle-2 font-weight-medium mb-1">Files</div>
+              <div class="d-flex flex-column gap-2">
+                <v-file-input
+                  v-model="selectedFile"
+                  accept=".pdf"
+                  label="Upload PDF"
+                  prepend-icon="mdi-upload"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details
+                  @change="handleFileUpload"
+                  class="file-upload"
+                />
+                
+                <v-list v-if="files.length > 0" class="file-list">
+                  <v-list-item
+                    v-for="file in files"
+                    :key="file.id"
+                    :title="file.filename"
+                    prepend-icon="mdi-file-pdf-box"
+                    @click="handleFileDownload(file.id)"
+                    class="file-item"
+                  >
+                    <template v-slot:append>
+                      <v-btn
+                        icon="mdi-download"
+                        variant="text"
+                        size="small"
+                        @click.stop="handleFileDownload(file.id)"
+                      />
+                      <v-btn
+                        icon="mdi-delete"
+                        variant="text"
+                        size="small"
+                        color="error"
+                        @click.stop="confirmDeleteFile(file)"
+                      />
+                    </template>
+                  </v-list-item>
+                </v-list>
+              </div>
+            </div>
+          </div>
+        </div>
+      </v-card-text>
+    </v-card>
+    
     <div class="mt-auto">
       <div class="text-caption text-medium-emphasis mb-1">
         Created: {{ formattedCreatedDate }}
@@ -179,7 +232,9 @@ export default {
       dueDate: this.task.dueDate || null,
       important: this.task.important,
       taskList: this.task.folder_id,
-      dateMenu: false
+      dateMenu: false,
+      selectedFile: null,
+      files: []
     }
   },
   
@@ -219,7 +274,7 @@ export default {
   },
   
   methods: {
-    ...mapActions('tasks', ['updateTask', 'deleteTask']),
+    ...mapActions('tasks', ['updateTask', 'deleteTask', 'uploadTaskFile', 'getTaskFiles', 'downloadFile', 'deleteFile']),
     
     /**
      * Emits close event to parent
@@ -301,6 +356,71 @@ export default {
         this.deleteTask(this.task.id)
         this.closeDetail()
       }
+    },
+    
+    /**
+     * Handles file upload
+     * @param {Event} event - File input change event
+     */
+    async handleFileUpload(event) {
+      if (!this.selectedFile) return
+      
+      try {
+        await this.uploadTaskFile({
+          taskId: this.task.id,
+          file: this.selectedFile
+        })
+        this.selectedFile = null
+        await this.loadFiles()
+      } catch (error) {
+        console.error('Error uploading file:', error)
+      }
+    },
+    
+    /**
+     * Loads task files
+     */
+    async loadFiles() {
+      try {
+        this.files = await this.getTaskFiles(this.task.id)
+      } catch (error) {
+        console.error('Error loading files:', error)
+      }
+    },
+    
+    /**
+     * Downloads a file
+     * @param {string} fileId - ID of the file to download
+     */
+    async handleFileDownload(fileId) {
+      try {
+        const blob = await this.downloadFile(fileId)
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = this.files.find(f => f.id === fileId)?.filename || 'file.pdf'
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } catch (error) {
+        console.error('Error downloading file:', error)
+      }
+    },
+    
+    /**
+     * Confirms and deletes a file
+     * @param {Object} file - File to delete
+     */
+    async confirmDeleteFile(file) {
+      if (confirm(`Delete file "${file.filename}"?`)) {
+        try {
+          await this.deleteFile(file.id)
+          await this.loadFiles()
+        } catch (error) {
+          console.error('Error deleting file:', error)
+        }
+      }
     }
   },
   watch: {
@@ -315,6 +435,9 @@ export default {
       },
       deep: true
     }
+  },
+  async created() {
+    await this.loadFiles()
   }
 }
 </script>
@@ -409,5 +532,35 @@ export default {
 .v-switch :deep(.v-label) {
   font-size: 0.875rem !important;
   color: var(--v-secondary-darken-1) !important;
+}
+
+.file-list {
+  background-color: var(--v-background-base) !important;
+  border: 1px solid var(--v-divider-base);
+  border-radius: 4px;
+}
+
+.file-list :deep(.v-list-item) {
+  min-height: 40px;
+  padding: 8px 16px;
+}
+
+.file-list :deep(.v-list-item-title) {
+  font-size: 0.875rem;
+  color: var(--v-secondary-darken-1);
+}
+
+.file-list :deep(.v-icon) {
+  font-size: 18px;
+  color: var(--v-primary-base);
+}
+
+.file-upload {
+  max-width: 200px;
+}
+
+.file-item {
+  min-height: 40px;
+  padding: 8px 16px;
 }
 </style>
