@@ -432,13 +432,12 @@ export default {
         this.dueDate = newTask.dueDate || null
         this.important = newTask.important
         this.taskList = newTask.folder_id
+
+        this.loadFiles();
       },
       deep: true
     }
   },
-  async created() {
-    await this.loadFiles()
-  }
 }
 </script>
 

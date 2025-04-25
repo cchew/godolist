@@ -373,16 +373,32 @@ def upload_file(task_id):
         return jsonify({'error': 'File type not allowed'}), 400
         
     try:
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(UPLOAD_FOLDER, filename)
-        file.save(file_path)
-        
+        # Verify task exists
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
+            cursor.execute('SELECT id FROM tasks WHERE id = ?', (task_id,))
+            if not cursor.fetchone():
+                return jsonify({'error': 'Task not found'}), 404
+
+            # Generate unique filename to prevent conflicts
+            base_filename = secure_filename(file.filename)
+            filename = f"{task_id}_{base_filename}"
+            file_path = os.path.join(UPLOAD_FOLDER, filename)
+            
+            # Check if file already exists for this task
+            cursor.execute(
+                'SELECT id FROM task_files WHERE task_id = ? AND filename = ?',
+                (task_id, base_filename)
+            )
+            if cursor.fetchone():
+                return jsonify({'error': 'File already exists for this task'}), 400
+
+            file.save(file_path)
+            
             cursor.execute(
                 '''INSERT INTO task_files (task_id, filename, file_path) 
                    VALUES (?, ?, ?)''',
-                (task_id, filename, file_path)
+                (task_id, base_filename, file_path)
             )
             file_id = cursor.lastrowid
             conn.commit()
@@ -400,7 +416,7 @@ def upload_file(task_id):
             return jsonify({
                 'id': file_id,
                 'task_id': task_id,
-                'filename': filename,
+                'filename': base_filename,
                 'file_path': file_path,
                 'embedding_id': embedding_id
             }), 201
