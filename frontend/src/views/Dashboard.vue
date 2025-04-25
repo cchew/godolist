@@ -20,6 +20,7 @@
                 :loading="tasksLoading"
                 @select-task="selectTask"
                 @go-do="startChatMode"
+                @agent-task-response="handleAgentResponse"
               />
               <ChatList
                 v-else
@@ -177,9 +178,7 @@ export default {
      * @returns {Array} Filtered tasks
      */
     filteredTasks() {
-      console.log('Filtering tasks for listId:', this.currentListId)
       const tasks = this.tasksByList(this.currentListId)
-      console.log('Filtered tasks:', tasks)
       return this.searchResults || tasks
     }
   },
@@ -286,12 +285,36 @@ export default {
     },
     
     /**
+     * Handles agent task response and starts chat mode
+     * @param {Object} response - Response from the agent
+     */
+    handleAgentResponse(response) {
+      // Start chat mode with the task from the response
+      this.chatMode = true;
+      this.chatTask = response.task; // The task object from the backend
+      
+      // Initialize chat with agent response
+      this.selectedChat = {
+        name: response.task.title,
+        messages: [{
+          role: 'assistant',
+          content: response.content
+        }]
+      };
+    },
+    
+    /**
      * Starts chat mode for a task
      * @param {Object} task - Task to chat about
      */
     startChatMode(task) {
-      this.chatMode = true
-      this.chatTask = task
+      this.chatMode = true;
+      this.chatTask = task;
+      // Keep existing behavior for regular chat mode
+      this.selectedChat = {
+        name: task.title,
+        messages: []
+      };
     },
     
     /**

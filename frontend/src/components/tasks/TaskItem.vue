@@ -18,21 +18,42 @@
         />
       </div>
     </template>
-    
+
     <v-list-item-title class="task-title">
       {{ task.title }}
     </v-list-item-title>
-    
+
     <v-list-item-subtitle class="text-caption text-truncate">
       <template v-if="task.dueDate">
-        <v-icon size="x-small" color="grey-darken-1" class="mr-1">mdi-calendar</v-icon>
-        <span :class="{'text-error': isOverdue}">{{ formattedDueDate }}</span>
+        <v-icon
+          size="x-small"
+          color="grey-darken-1"
+          class="mr-1"
+        >
+          mdi-calendar
+        </v-icon>
+        <span :class="{ 'text-error': isOverdue }">{{ formattedDueDate }}</span>
       </template>
       <span v-if="task.notes" class="ml-2 text-truncate">{{ task.notes }}</span>
     </v-list-item-subtitle>
-    
+
     <template v-slot:append>
       <div class="d-flex align-center">
+        <v-tooltip
+          v-if="isAgentTask"
+          location="top"
+          text="Go do for me"
+        >
+          <template v-slot:activator="{ props }">
+            <v-btn
+              icon="mdi-robot"
+              size="small"
+              variant="text"
+              v-bind="props"
+              @click.stop="agentTask"
+            />
+          </template>
+        </v-tooltip>
         <v-tooltip location="top" text="Go do">
           <template v-slot:activator="{ props }">
             <v-btn
@@ -56,7 +77,7 @@
             />
           </template>
         </v-tooltip>
-        
+
         <v-menu open-on-hover>
           <template v-slot:activator="{ props }">
             <v-btn
@@ -67,7 +88,7 @@
               @click.stop
             />
           </template>
-          
+
           <v-list density="compact" width="200">
             <v-list-item @click.stop="editTask">
               <template v-slot:prepend>
@@ -75,7 +96,7 @@
               </template>
               <v-list-item-title>Edit</v-list-item-title>
             </v-list-item>
-            
+
             <v-list-item @click.stop="confirmDeleteTask" class="text-error">
               <template v-slot:prepend>
                 <v-icon size="small" class="mr-2 text-error">mdi-delete</v-icon>
@@ -90,15 +111,16 @@
 </template>
 
 <script>
-import { format, isPast, isToday } from 'date-fns'
+import { format, isPast, isToday } from 'date-fns';
 
 /**
  * TaskItem component displays a single task with actions
  * @component
+ * @vue/component
  */
 export default {
   name: 'TaskItem',
-  
+
   props: {
     /**
      * The task object to display
@@ -107,98 +129,113 @@ export default {
      */
     task: {
       type: Object,
-      required: true
+      required: true,
     }
   },
-  
+
+  created() {
+    // Remove debug logging
+  },
+
   computed: {
     /**
+     * Whether the task is one that can be processed by an agent.
+     * @returns {boolean} True if task can be processed by an agent
+     */
+    isAgentTask() {
+      const agentKeywords = ['review', 'analyze', 'summarize', 'process'];
+      return agentKeywords.some(keyword => this.task.title.toLowerCase().includes(keyword));
+    },
+
+    /**
      * Task completion status with getter/setter
-     * @type {Boolean}
+     * @returns {boolean} Task completion status
      */
     isCompleted: {
       get() {
-        return this.task.completed
+        return this.task.completed;
       },
       set(value) {
         // This is handled by the toggleComplete method
       }
     },
-    
+
     /**
      * Formatted due date string
      * @returns {string} Formatted date string
      */
     formattedDueDate() {
-      if (!this.task.dueDate) return ''
-      
-      const date = new Date(this.task.dueDate)
-      
-      if (isToday(date)) {
-        return 'Today'
-      }
-      
-      return format(date, 'MMM d')
+      if (!this.task.dueDate) return '';
+
+      const date = new Date(this.task.dueDate);
+      return isToday(date) ? 'Today' : format(date, 'MMM d');
     },
-    
+
     /**
      * Whether the task is overdue
-     * @returns {Boolean} True if task is overdue
+     * @returns {boolean} True if task is overdue
      */
     isOverdue() {
-      if (!this.task.dueDate || this.task.completed) return false
-      
-      const dueDate = new Date(this.task.dueDate)
-      return isPast(dueDate) && !isToday(dueDate)
+      if (!this.task.dueDate || this.task.completed) return false;
+
+      const dueDate = new Date(this.task.dueDate);
+      return isPast(dueDate) && !isToday(dueDate);
     }
   },
-  
+
   methods: {
     /**
      * Emits select event with the task
      */
     selectTask() {
-      this.$emit('select', this.task)
+      this.$emit('select', this.task);
     },
-    
+
     /**
      * Emits toggle-complete event with task ID
      */
     toggleComplete() {
-      this.$emit('toggle-complete', this.task.id)
+      this.$emit('toggle-complete', this.task.id);
     },
-    
+
     /**
      * Emits toggle-important event with task ID
      */
     toggleImportant() {
-      this.$emit('toggle-important', this.task.id)
+      this.$emit('toggle-important', this.task.id);
     },
-    
+
     /**
      * Emits update event with the task
      */
     editTask() {
-      this.$emit('update', this.task)
+      this.$emit('update', this.task);
     },
-    
+
     /**
      * Confirms and emits delete event with task ID
      */
     confirmDeleteTask() {
       if (confirm(`Delete task "${this.task.title}"?`)) {
-        this.$emit('delete', this.task.id)
+        this.$emit('delete', this.task.id);
       }
     },
-    
+
     /**
      * Emits go-do event with the task
      */
     goDoTask() {
-      this.$emit('go-do', this.task)
+      this.$emit('go-do', this.task);
+    },
+
+    /**
+     * Emits agent-task event with the task
+     */
+    agentTask() {
+      this.$emit('agent-task', this.task);
     }
   }
-}
+};
 </script>
 
 <style scoped>

@@ -28,6 +28,7 @@
             @toggle-important="toggleImportant"
             @delete="deleteTask"
             @go-do="goDoTask"
+            @agent-task="handleAgentTask"
           />
         </v-slide-y-transition>
       </div>
@@ -77,7 +78,8 @@ export default {
       'updateTask',
       'deleteTask',
       'toggleTaskCompletion',
-      'toggleTaskImportance'
+      'toggleTaskImportance',
+      'processTaskWithAgent'
     ]),
     
     /**
@@ -110,6 +112,19 @@ export default {
      */
     goDoTask(task) {
       this.$emit('go-do', task)
+    },
+    
+    /**
+     * Handles agent task processing and emits the result
+     * @param {Object} task - The task to process with agent
+     */
+    async handleAgentTask(task) {
+      try {
+        const response = await this.processTaskWithAgent(task);
+        this.$emit('agent-task-response', response);
+      } catch (error) {
+        console.error('Error processing agent task:', error);
+      }
     }
   }
 }

@@ -35,7 +35,6 @@ const getters = {
    * @returns {Function} Function that takes listId and returns filtered tasks
    */
   tasksByList: (state) => (listId) => {
-    console.log('Filtering tasks for listId:', listId, 'Current tasks:', state.tasks)
     if (listId === 'important') {
       return state.tasks.filter(task => task.isImportant)
     } else if (listId === 'completed') {
@@ -43,7 +42,6 @@ const getters = {
     } else if (listId === 'all') {
       return state.tasks
     } else if (listId) {
-      // Convert listId to number for comparison with folder_id
       const folderId = parseInt(listId)
       return state.tasks.filter(task => task.folder_id === folderId)
     }
@@ -134,11 +132,9 @@ const actions = {
   async fetchTasks({ commit }, folderId = null) {
     commit('setLoading', true)
     try {
-      console.log('Fetching tasks for folderId:', folderId)
       const response = await axios.get('http://127.0.0.1:5000/tasks', {
         params: { folder_id: folderId }
       })
-      console.log('Tasks API response:', response.data)
       commit('setTasks', response.data)
     } catch (error) {
       console.error('Error fetching tasks:', error)
@@ -158,8 +154,6 @@ const actions = {
   async addTask({ commit }, task) {
     commit('setLoading', true)
     try {
-      console.log('Adding task:', task)
-      // Map frontend field names to backend API field names
       const apiTask = {
         title: task.title,
         notes: task.description || task.notes || '',
@@ -170,9 +164,7 @@ const actions = {
       }
       
       const response = await axios.post('http://127.0.0.1:5000/tasks', apiTask)
-      console.log('Task creation response:', response.data)
       
-      // Map backend response back to frontend field names
       const newTask = {
         ...response.data,
         description: response.data.notes,
@@ -203,8 +195,6 @@ const actions = {
   async updateTask({ commit }, { id, updates }) {
     commit('setLoading', true)
     try {
-      console.log('Updating task:', id, updates)
-      // Map frontend field names to backend API field names
       const apiUpdates = {
         title: updates.title,
         notes: updates.description || updates.notes,
@@ -215,9 +205,7 @@ const actions = {
       }
       
       const response = await axios.patch(`http://127.0.0.1:5000/tasks?id=${id}`, apiUpdates)
-      console.log('Task update response:', response.data)
       
-      // Map backend response back to frontend field names
       const frontendUpdates = {
         ...response.data,
         description: response.data.notes,
@@ -247,7 +235,6 @@ const actions = {
   async deleteTask({ commit }, id) {
     commit('setLoading', true)
     try {
-      console.log('Deleting task:', id)
       await axios.delete(`http://127.0.0.1:5000/tasks?id=${id}`)
       commit('deleteTask', id)
     } catch (error) {
@@ -296,6 +283,36 @@ const actions = {
    */
   setSelectedTask({ commit }, task) {
     commit('setSelectedTask', task)
+  },
+
+  async processTaskWithAgent({ state }, task) {
+    try {
+      // First, fetch any associated files for the task
+      const files = await axios.get(`http://127.0.0.1:5000/tasks/${task.id}/files`);
+      
+      // Prepare the request payload
+      const payload = {
+        task_id: task.id,
+        task_title: task.title,
+        task_type: getTaskType(task.title),
+        files: files.data
+      };
+
+      // Send the request to the backend
+      const response = await axios.post(
+        'http://127.0.0.1:5000/process-task',
+        payload
+      );
+
+      // Extract just the content from the RunResponse
+      return {
+        task: response.data.task,
+        content: response.data.content.match(/content="([^"]*)"/)?.[1] || response.data.content
+      };
+    } catch (error) {
+      console.error('Error processing task with agent:', error);
+      throw error;
+    }
   },
   
   /**
@@ -402,7 +419,6 @@ const mutations = {
    * @param {Array} tasks - Array of task objects
    */
   setTasks(state, tasks) {
-    console.log('Setting tasks in state:', tasks)
     state.tasks = tasks
   },
   
@@ -473,6 +489,16 @@ const mutations = {
     state.error = error
   }
 }
+
+// Helper function to determine task type
+ function getTaskType(title) {
+   const titleLower = title.toLowerCase();
+   // 
+   if (titleLower.includes('review')) return 'review';
+   if (titleLower.includes('analyze')) return 'analyze';
+   if (titleLower.includes('summarise')) return 'summarize';
+   return 'review'; // Default to review if no specific type is found
+ }
 
 export default {
   namespaced: true,

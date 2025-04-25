@@ -1,19 +1,23 @@
 # Development standards
 
 1. Ensure that all code are properly documented and formatted.
+1. Keep variable and method names consistent with existing when adding new functionality.
 
 # Python 
 
 1. When installing new Python packages, always activate `venv` and update `requirements.txt`
 1. Use Python coding conventions
 
+# JavaScript
+
+1. Where possible/necessary, end JavaScript commands with ';'.
+
 # Vue
 
-1. Use Vue 3 and Options API
+1. Use Vue 3, JavaScript and Options API
 1. Create and use components where appropriate
 1. Format as per Vue Style Guide
 1. Document using JSDoc
-
 
 # Naming conventions
 1. Vuex mutations: camelCase
