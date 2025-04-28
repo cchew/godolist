@@ -42,11 +42,11 @@
         <v-tooltip
           v-if="isAgentTask"
           location="top"
-          text="Go do for me"
+          text="Go do"
         >
           <template v-slot:activator="{ props }">
             <v-btn
-              icon="mdi-robot"
+              icon="mdi-play-circle-outline"
               size="small"
               variant="text"
               v-bind="props"
@@ -54,10 +54,10 @@
             />
           </template>
         </v-tooltip>
-        <v-tooltip location="top" text="Go do">
+        <v-tooltip location="top" text="Start chat">
           <template v-slot:activator="{ props }">
             <v-btn
-              icon="mdi-play-circle-outline"
+              icon="mdi-chat-outline"
               size="small"
               variant="text"
               v-bind="props"
